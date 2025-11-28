@@ -3,6 +3,8 @@ import { Zombie } from "./entities/zombie"
 import type { Bullet } from "./entities/bullet"
 import { Grenade, type GrenadeType } from "./entities/grenade"
 import { GameMap } from "./map"
+import { GameMapLevel2 } from "./map-level2"
+import { GameMapLevel3 } from "./map-level3"
 import { WallBuy, MysteryBox, VendingMachine, MaxAmmoBox } from "./interactables"
 import { PowerUp, type PowerUpType } from "./entities/power-up"
 import { WEAPONS, type WeaponData } from "./weapons"
@@ -24,6 +26,8 @@ export class GameEngine {
   private gameMap: GameMap
   private wallBuys: WallBuy[] = []
   private mysteryBoxes: MysteryBox[] = []
+  private mysteryBoxUses: number = 0
+  private maxMysteryBoxUses: number = 0
   private vendingMachines: VendingMachine[] = []
   private maxAmmoBoxes: MaxAmmoBox[] = []
 
@@ -83,6 +87,7 @@ export class GameEngine {
     triggerScreenShake: (intensity: number) => void,
     onGameOver: () => void,
     onPauseToggle: () => void = () => {},
+    mapType: "level1" | "level2" | "level3" = "level1",
   ) {
     this.canvas = canvas
     this.ctx = canvas.getContext("2d")!
@@ -93,7 +98,13 @@ export class GameEngine {
     this.onGameOver = onGameOver
     this.onPauseToggle = onPauseToggle
 
-    this.gameMap = new GameMap(2400, 2400)
+    if (mapType === "level2") {
+      this.gameMap = new GameMapLevel2(2400, 2400);
+    } else if (mapType === "level3") {
+      this.gameMap = new GameMapLevel3(2400, 2400);
+    } else {
+      this.gameMap = new GameMap(2400, 2400);
+    }
     this.player = new Player(this.gameMap.width / 2, this.gameMap.height / 2)
     this.audio = new AudioManager()
 
@@ -119,26 +130,43 @@ export class GameEngine {
   }
 
   private setupInteractables() {
-    this.wallBuys = [
-      new WallBuy(400, 400, WEAPONS.shotgun, 500),
-      new WallBuy(800, 200, WEAPONS.smg, 750),
-      new WallBuy(1600, 400, WEAPONS.rifle, 1000),
-      new WallBuy(2000, 800, WEAPONS.ak47, 1200),
-      new WallBuy(400, 1600, WEAPONS.sniper, 1500),
-      new WallBuy(2000, 1600, WEAPONS.lmg, 1750),
-    ]
+    if (this.gameMap instanceof GameMapLevel3) {
+      // Level 3 (Buildings with Power System) - now matches the new structure
+      // The layout is handled in the map class itself
+      // We still need to initialize weapons in starting room and other static elements
+      this.wallBuys = [new WallBuy(1200, 1000, WEAPONS.shotgun, 500)] // In the starting room
+      this.mysteryBoxes = [new MysteryBox(1100, 1100)] // Initial position
+      this.maxAmmoBoxes = [new MaxAmmoBox(1200, 1300, 250)] // In the starting room
+    } else if (this.gameMap instanceof GameMapLevel2) {
+      // Level 2 (Buildings with Power System) - now matches the new structure
+      // The layout is handled in the map class itself
+      // We still need to initialize weapons in starting room and other static elements
+      this.wallBuys = [new WallBuy(1200, 1000, WEAPONS.shotgun, 500)] // In the starting room
+      this.mysteryBoxes = [new MysteryBox(1100, 1100)] // Initial position
+      this.maxAmmoBoxes = [new MaxAmmoBox(1200, 1300, 250)] // In the starting room
+    } else {
+      // Level 1 (original) positions
+      this.wallBuys = [
+        new WallBuy(400, 400, WEAPONS.shotgun, 500),
+        new WallBuy(800, 200, WEAPONS.smg, 750),
+        new WallBuy(1600, 400, WEAPONS.rifle, 1000),
+        new WallBuy(2000, 800, WEAPONS.ak47, 1200),
+        new WallBuy(400, 1600, WEAPONS.sniper, 1500),
+        new WallBuy(2000, 1600, WEAPONS.lmg, 1750),
+      ]
 
-    this.mysteryBoxes = [new MysteryBox(600, 1200), new MysteryBox(1800, 1200)]
+      this.mysteryBoxes = [new MysteryBox(600, 1200), new MysteryBox(1800, 1200)]
 
-    this.vendingMachines = [
-      new VendingMachine(950, 950, "juggernog", 2500),
-      new VendingMachine(1450, 950, "speed-cola", 3000),
-      new VendingMachine(950, 1350, "double-tap", 2000),
-      new VendingMachine(1450, 1350, "stamin-up", 2000),
-      new VendingMachine(1200, 600, "quick-revive", 1500),
-    ]
+      this.vendingMachines = [
+        new VendingMachine(950, 950, "juggernog", 2500),
+        new VendingMachine(1450, 950, "speed-cola", 3000),
+        new VendingMachine(950, 1350, "double-tap", 2000),
+        new VendingMachine(1450, 1350, "stamin-up", 2000),
+        new VendingMachine(1200, 600, "quick-revive", 1500),
+      ]
 
-    this.maxAmmoBoxes = [new MaxAmmoBox(1200, 1200, 250)]
+      this.maxAmmoBoxes = [new MaxAmmoBox(1200, 1200, 250)]
+    }
   }
 
   private setupEventListeners() {
@@ -266,6 +294,22 @@ export class GameEngine {
       }
     }
 
+    // Handle power switches for level 2 and 3 (the new building levels)
+    if (this.gameMap instanceof GameMapLevel2 || this.gameMap instanceof GameMapLevel3) {
+      // Check for power switch interaction
+      const mapWithPower = this.gameMap as any; // Using 'any' to access power-related methods
+
+      // Check all power switches to see if any are nearby
+      for (const powerSwitch of mapWithPower.powerSwitches) {
+        const dist = Math.hypot(this.player.x - powerSwitch.x, this.player.y - powerSwitch.y);
+        if (dist < 100 && !powerSwitch.isOn) { // Only allow interaction if switch is off
+          mapWithPower.togglePower(powerSwitch.buildingId);
+          this.audio.play("switchWeapons");
+          return;
+        }
+      }
+    }
+
     for (const wallBuy of this.wallBuys) {
       if (wallBuy.isNear(this.player.x, this.player.y)) {
         if (this.points >= wallBuy.cost) {
@@ -278,38 +322,118 @@ export class GameEngine {
       }
     }
 
-    for (const box of this.mysteryBoxes) {
-      if (box.isNear(this.player.x, this.player.y) && !box.isOpen) {
-        if (this.points >= box.cost) {
-          this.points -= box.cost
-          const weapon = box.open()
+    // Handle mystery box for redesigned maps
+    if (this.gameMap instanceof GameMapLevel2 || this.gameMap instanceof GameMapLevel3) {
+      const mapWithMysteryBox = this.gameMap as any; // Using 'any' to access mystery-box methods
+      const mysteryBox = mapWithMysteryBox.getMysteryBoxNear(this.player.x, this.player.y);
+      if (mysteryBox) {
+        if (this.points >= 950) { // Mystery box cost
+          this.points -= 950;
+          // Get a random weapon from the available weapons
+          const randomWeapon = this.getRandomWeapon();
           // Play a random mystery box sound
           const mysterySounds = ["mysteryBox", "mysteryBox1", "mysteryBox2", "mysteryBox3"];
           const randomMysterySound = mysterySounds[Math.floor(Math.random() * mysterySounds.length)];
-          this.audio.play(randomMysterySound)
-          this.tryBuyWeapon(weapon, 0)
+          this.audio.play(randomMysterySound);
+          this.tryBuyWeapon(randomWeapon, 0);
+
+          // Use the mystery box and potentially move it
+          const success = mapWithMysteryBox.useMysteryBox();
+          if (success) {
+            this.audio.play("mysteryBox");
+          }
         } else {
           // Player doesn't have enough money for the mystery box
-          this.audio.play("cantBuy")
+          this.audio.play("cantBuy");
         }
-        return
+        return;
+      }
+    } else {
+      // Original mystery box handling for level 1
+      for (const box of this.mysteryBoxes) {
+        if (box.isNear(this.player.x, this.player.y) && !box.isOpen) {
+          if (this.points >= box.cost) {
+            this.points -= box.cost
+            const weapon = box.open()
+            // Play a random mystery box sound
+            const mysterySounds = ["mysteryBox", "mysteryBox1", "mysteryBox2", "mysteryBox3"];
+            const randomMysterySound = mysterySounds[Math.floor(Math.random() * mysterySounds.length)];
+            this.audio.play(randomMysterySound)
+            this.tryBuyWeapon(weapon, 0)
+
+            // For fortress map, handle mystery box moving after use
+            if (this.gameMap instanceof GameMapLevel2) {
+              this.mysteryBoxUses++;
+              if (this.maxMysteryBoxUses === 0) {
+                // Set the max uses to a random value between 3-6 for this game session
+                this.maxMysteryBoxUses = Math.floor(Math.random() * 4) + 3; // 3-6
+              }
+
+              if (this.mysteryBoxUses >= this.maxMysteryBoxUses) {
+                // Move the mystery box to a new random room
+                this.mysteryBoxes[0] = this.createRandomMysteryBoxPosition();
+                this.mysteryBoxUses = 0;
+                this.maxMysteryBoxUses = Math.floor(Math.random() * 4) + 3; // Set new random value
+                this.audio.play("doorSound"); // Play a sound to indicate the move
+              }
+            } else if (this.gameMap instanceof GameMapLevel3) {
+              // For the building map, mystery box functionality could be different if needed
+              // Currently, it functions like the original maps
+              this.audio.play("mysteryBox");
+            }
+          } else {
+            // Player doesn't have enough money for the mystery box
+            this.audio.play("cantBuy")
+          }
+          return
+        }
       }
     }
 
-    for (const machine of this.vendingMachines) {
-      if (machine.isNear(this.player.x, this.player.y)) {
-        if (this.points >= machine.cost && !this.player.perks.includes(machine.perkType)) {
-          this.points -= machine.cost
-          this.player.addPerk(machine.perkType)
-          // Play a random vending machine sound
-          const vendingSounds = ["vendingMachine", "vending1", "vending2"];
-          const randomVendingSound = vendingSounds[Math.floor(Math.random() * vendingSounds.length)];
-          this.audio.play(randomVendingSound)
-        } else if (this.points < machine.cost) {
-          // Player doesn't have enough money for the vending machine perk
-          this.audio.play("cantBuy")
+    // Handle vending machines for redesigned maps
+    if (this.gameMap instanceof GameMapLevel2 || this.gameMap instanceof GameMapLevel3) {
+      const mapWithVending = this.gameMap as any; // Using 'any' to access vending-machine methods
+      const vendingMachine = mapWithVending.getVendingMachineNear(this.player.x, this.player.y);
+      if (vendingMachine) {
+        // Check if the vending machine is powered
+        if (vendingMachine.powered) {
+          if (this.points >= vendingMachine.cost && !this.player.perks.includes(vendingMachine.perkType)) {
+            this.points -= vendingMachine.cost;
+            this.player.addPerk(vendingMachine.perkType);
+            // Play a random vending machine sound
+            const vendingSounds = ["vendingMachine", "vending1", "vending2"];
+            const randomVendingSound = vendingSounds[Math.floor(Math.random() * vendingSounds.length)];
+            this.audio.play(randomVendingSound);
+          } else if (this.points < vendingMachine.cost) {
+            // Player doesn't have enough money for the vending machine perk
+            this.audio.play("cantBuy");
+          } else if (this.player.perks.includes(vendingMachine.perkType)) {
+            // Player already has this perk
+            this.audio.play("cantBuy");
+          }
+        } else {
+          // Machine not powered
+          this.audio.play("cantBuy");
         }
-        return
+        return;
+      }
+    } else {
+      // Original vending machine handling for level 1
+      for (const machine of this.vendingMachines) {
+        if (machine.isNear(this.player.x, this.player.y)) {
+          if (this.points >= machine.cost && !this.player.perks.includes(machine.perkType)) {
+            this.points -= machine.cost
+            this.player.addPerk(machine.perkType)
+            // Play a random vending machine sound
+            const vendingSounds = ["vendingMachine", "vending1", "vending2"];
+            const randomVendingSound = vendingSounds[Math.floor(Math.random() * vendingSounds.length)];
+            this.audio.play(randomVendingSound)
+          } else if (this.points < machine.cost) {
+            // Player doesn't have enough money for the vending machine perk
+            this.audio.play("cantBuy")
+          }
+          return
+        }
       }
     }
 
@@ -326,6 +450,12 @@ export class GameEngine {
         return
       }
     }
+  }
+
+  private getRandomWeapon() {
+    // Return a random weapon from the available weapons
+    const weapons = Object.values(WEAPONS);
+    return weapons[Math.floor(Math.random() * weapons.length)];
   }
 
   start() {
@@ -355,6 +485,18 @@ export class GameEngine {
   }
 
   restart() {
+    this.restartWithMap("level1");
+  }
+
+  restartWithMap(mapType: "level1" | "level2" | "level3" = "level1") {
+    if (mapType === "level2") {
+      this.gameMap = new GameMapLevel2(2400, 2400);
+    } else if (mapType === "level3") {
+      this.gameMap = new GameMapLevel3(2400, 2400);
+    } else {
+      this.gameMap = new GameMap(2400, 2400);
+    }
+
     this.player = new Player(this.gameMap.width / 2, this.gameMap.height / 2)
     this.zombies = []
     this.bullets = []
@@ -371,7 +513,10 @@ export class GameEngine {
     this.roundTransition = false
     this.pendingWeaponPurchase = null
 
-    this.gameMap = new GameMap(2400, 2400)
+    // Reset mystery box tracking
+    this.mysteryBoxUses = 0;
+    this.maxMysteryBoxUses = 0; // Will be set based on random value between 3-6 when needed
+
     this.particleSystem.clear()
     this.floatingTextSystem.clear()
     this.killFeedSystem.clear()
@@ -380,11 +525,60 @@ export class GameEngine {
     this.startCountdown = 0
     this.isCountdownActive = false
 
-    for (const box of this.mysteryBoxes) {
-      box.reset()
+    // Reset mystery boxes
+    if (mapType === "level2") {
+      // For fortress map, create mystery box at a random room
+      // The new GameMapLevel2 handles mystery box internally
+      this.mysteryBoxes = [new MysteryBox(1100, 1100)]; // This will be replaced by map's internal logic
+    } else if (mapType === "level3") {
+      // For the building map, the new GameMapLevel3 handles mystery box internally
+      this.mysteryBoxes = [new MysteryBox(1200, 1200)]; // This will be replaced by map's internal logic
+    } else {
+      this.mysteryBoxes = [new MysteryBox(600, 1200), new MysteryBox(1800, 1200)];
+      for (const box of this.mysteryBoxes) {
+        box.reset()
+      }
     }
 
     this.start()
+  }
+
+  private createRandomMysteryBoxPosition(): MysteryBox {
+    // Different positions based on the map type
+    if (this.gameMap instanceof GameMapLevel3) {
+      // For the building map, use building positions
+      const possiblePositions = [
+        { x: 400, y: 400 },   // Building 1
+        { x: 1800, y: 400 },  // Building 2
+        { x: 400, y: 1800 },  // Building 3
+        { x: 1800, y: 1800 }, // Building 4
+        { x: 1200, y: 1100 }, // Building 5 (center)
+        { x: 200, y: 1200 },  // Building 6 (west)
+        { x: 2200, y: 1200 }, // Building 7 (east)
+        { x: 1200, y: 200 },  // Building 8 (north)
+        { x: 1200, y: 2200 }, // Building 9 (south)
+      ];
+
+      // Choose a random position from the available buildings
+      const randomPosition = possiblePositions[Math.floor(Math.random() * possiblePositions.length)];
+
+      return new MysteryBox(randomPosition.x, randomPosition.y);
+    } else {
+      // For fortress map, use room positions
+      const possiblePositions = [
+        { x: 1200, y: 400 },   // Room 1 (North)
+        { x: 1700, y: 400 },   // Room 2 (Northeast)
+        { x: 1200, y: 1700 },  // Room 3 (South)
+        { x: 500, y: 1700 },   // Room 4 (Southwest)
+        { x: 200, y: 1200 },   // Room 5 (West)
+        { x: 2200, y: 1200 },  // Room 6 (East)
+      ];
+
+      // Choose a random position from the available rooms
+      const randomPosition = possiblePositions[Math.floor(Math.random() * possiblePositions.length)];
+
+      return new MysteryBox(randomPosition.x, randomPosition.y);
+    }
   }
 
   private gameLoop = () => {
@@ -824,6 +1018,15 @@ export class GameEngine {
 
     this.gameMap.renderDoorPrompts(this.ctx, this.player.x, this.player.y)
 
+    // Render additional prompts based on map type
+    if (this.gameMap instanceof GameMapLevel2 || this.gameMap instanceof GameMapLevel3) {
+      // For redesigned maps, render power switch and other prompts from map class
+      const mapWithPrompts = this.gameMap as any; // Using 'any' to access prompt methods
+      mapWithPrompts.renderPowerSwitchPrompt(this.ctx, this.player.x, this.player.y);
+      mapWithPrompts.renderVendingMachinePrompts(this.ctx, this.player.x, this.player.y);
+      mapWithPrompts.renderMysteryBoxPrompt(this.ctx, this.player.x, this.player.y);
+    }
+
     this.renderInteractables()
 
     for (const powerUp of this.powerUps) {
@@ -941,9 +1144,22 @@ export class GameEngine {
     for (const box of this.mysteryBoxes) {
       box.render(this.ctx, this.player.x, this.player.y)
     }
-    for (const machine of this.vendingMachines) {
-      machine.render(this.ctx, this.player.x, this.player.y)
+
+    // Render vending machines based on the map type
+    if (this.gameMap instanceof GameMapLevel2 || this.gameMap instanceof GameMapLevel3) {
+      // For redesigned maps, use the methods from the map class
+      const mapWithVending = this.gameMap as any; // Using 'any' to access vending-machine methods
+      for (const vm of mapWithVending.vendingMachines) {
+        // Since the map class handles vending machine rendering, we just call it
+        // The map class renders them in its render function
+      }
+    } else {
+      // Original vending machine rendering for level 1
+      for (const machine of this.vendingMachines) {
+        machine.render(this.ctx, this.player.x, this.player.y)
+      }
     }
+
     for (const ammoBox of this.maxAmmoBoxes) {
       ammoBox.render(this.ctx, this.player.x, this.player.y)
     }

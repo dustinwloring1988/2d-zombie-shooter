@@ -8,12 +8,14 @@ import { GameOverScreen } from "./game-over-screen"
 import { WeaponSwapModal } from "./weapon-swap-modal"
 import { HitOverlay } from "./hit-overlay"
 import { PauseMenu } from "./pause-menu"
+import { MapSelector } from "./map-selector"
 
 export default function ZombieGame() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const gameEngineRef = useRef<GameEngine | null>(null)
-  const [gameState, setGameState] = useState<"menu" | "playing" | "paused" | "gameover">("menu")
+  const [gameState, setGameState] = useState<"menu" | "mapselect" | "playing" | "paused" | "gameover">("menu")
   const [showPauseMenu, setShowPauseMenu] = useState(false)
+  const [selectedMap, setSelectedMap] = useState<"level1" | "level2" | "level3">("level1")
   const [hudData, setHudData] = useState({
     health: 100,
     maxHealth: 100,
@@ -116,6 +118,17 @@ export default function ZombieGame() {
   }, []);
 
   const startGame = useCallback((newSettings?: typeof settings) => {
+    // First, show the map selector
+    setGameState("mapselect")
+
+    // Update settings if provided
+    if (newSettings) {
+      setSettings(newSettings);
+    }
+  }, [])
+
+  const selectAndStartGame = useCallback((mapId: "level1" | "level2" | "level3", currentSettings?: typeof settings) => {
+    setSelectedMap(mapId);
     setGameState("playing")
     setShowPauseMenu(false)
     if (canvasRef.current && !gameEngineRef.current) {
@@ -127,10 +140,11 @@ export default function ZombieGame() {
         triggerScreenShake,
         () => setGameState("gameover"),
         togglePauseMenu,
+        mapId // Pass the selected map to the game engine
       )
       gameEngineRef.current.start()
     } else if (gameEngineRef.current) {
-      gameEngineRef.current.restart()
+      gameEngineRef.current.restartWithMap(mapId) // Use the new method to restart with new map
     }
 
     // Stop trailer if it's playing
@@ -139,16 +153,16 @@ export default function ZombieGame() {
     }
 
     // Update settings if provided
-    if (newSettings) {
-      setSettings(newSettings);
+    if (currentSettings) {
+      setSettings(currentSettings);
     }
 
     // Update volumes based on settings
     if (gameEngineRef.current) {
       gameEngineRef.current.updateVolumes(
-        newSettings?.masterVolume ?? settings.masterVolume,
-        newSettings?.musicVolume ?? settings.musicVolume,
-        newSettings?.soundVolume ?? settings.soundVolume
+        currentSettings?.masterVolume ?? settings.masterVolume,
+        currentSettings?.musicVolume ?? settings.musicVolume,
+        currentSettings?.soundVolume ?? settings.soundVolume
       );
     }
   }, [updateHUD, showWeaponSwap, triggerHit, triggerScreenShake, togglePauseMenu, settings])
@@ -289,6 +303,7 @@ export default function ZombieGame() {
       </div>
 
       {gameState === "menu" && <StartScreen onStart={startGame} onPlayTrailer={handlePlayTrailer} />}
+      {gameState === "mapselect" && <MapSelector onSelectMap={(mapId) => selectAndStartGame(mapId, settings)} />}
       {gameState === "gameover" && (
         <GameOverScreen round={hudData.round} points={hudData.points} onRestart={() => startGame()} />
       )}
