@@ -9,6 +9,7 @@ export interface GamepadState {
     weaponNext: boolean
     weaponPrev: boolean
     pause: boolean
+    roll: boolean
   }
   connected: boolean
 }
@@ -26,6 +27,7 @@ export class GamepadManager {
       weaponNext: false,
       weaponPrev: false,
       pause: false,
+      roll: false,
     },
     connected: false,
   }
@@ -96,6 +98,7 @@ export class GamepadManager {
     this.state.buttons.weaponNext = justPressed(5)
     this.state.buttons.weaponPrev = justPressed(4)
     this.state.buttons.pause = justPressed(9)
+    this.state.buttons.roll = justPressed(3) // Y button
 
     // Store previous button states
     this.prevButtons = gamepad.buttons.map((b) => b.pressed)

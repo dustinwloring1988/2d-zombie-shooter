@@ -58,6 +58,16 @@ export class Player {
   private static MAX_RECOIL_ANGLE = 0.1
   private static MAX_RECOIL_DISTANCE = 10
 
+  // Roll properties
+  private isRolling = false
+  private rollCooldown = 0
+  private rollDuration = 300 // 0.3 seconds for roll animation
+  private rollTimer = 0
+  private rollSpeedMultiplier = 2.0 // Roll moves at 2x normal speed
+  private static ROLL_COOLDOWN = 7000 // 7 seconds cooldown
+  private rollDirectionX = 0
+  private rollDirectionY = 0
+
   // For muzzle flash effects
   onMuzzleFlash?: (x: number, y: number, angle: number) => void
 
@@ -107,6 +117,11 @@ export class Player {
       speed *= 1.3
     }
 
+    // Apply roll multiplier during roll
+    if (this.isRolling) {
+      speed *= this.rollSpeedMultiplier
+    }
+
     if (dx !== 0 || dy !== 0) {
       const len = Math.hypot(dx, dy)
       this.targetVelocityX = (dx / len) * speed
@@ -132,6 +147,12 @@ export class Player {
       // Snap to zero when very slow
       if (Math.abs(this.velocityX) < 0.1) this.velocityX = 0
       if (Math.abs(this.velocityY) < 0.1) this.velocityY = 0
+    }
+
+    // During a roll, override the movement direction
+    if (this.isRolling) {
+      this.velocityX = this.rollDirectionX * speed
+      this.velocityY = this.rollDirectionY * speed
     }
 
     // Apply velocity to position
@@ -386,6 +407,111 @@ export class Player {
     return type === "frag" ? this.fragGrenade > 0 : this.stunGrenade > 0
   }
 
+  getRollCooldown(): number {
+    return this.rollCooldown
+  }
+
+  getRollCooldownPercent(): number {
+    return 1 - (this.rollCooldown / Player.ROLL_COOLDOWN)
+  }
+
+  isRollReady(): boolean {
+    return this.rollCooldown <= 0
+  }
+
+  canRoll(): boolean {
+    return this.rollCooldown <= 0 && !this.isRolling
+  }
+
+  roll(dx: number, dy: number) {
+    if (!this.canRoll()) return false
+
+    this.isRolling = true
+    this.rollCooldown = Player.ROLL_COOLDOWN
+    this.rollTimer = this.rollDuration
+
+    // Set roll direction based on input
+    if (dx !== 0 || dy !== 0) {
+      const len = Math.hypot(dx, dy)
+      this.rollDirectionX = (dx / len) || 0
+      this.rollDirectionY = (dy / len) || 0
+    } else {
+      // If no direction specified, roll in the direction the player is facing
+      this.rollDirectionX = Math.cos(this.angle)
+      this.rollDirectionY = Math.sin(this.angle)
+    }
+
+    return true
+  }
+
+  update(dt: number) {
+    // Update roll cooldown
+    if (this.rollCooldown > 0) {
+      this.rollCooldown -= dt
+      if (this.rollCooldown < 0) this.rollCooldown = 0
+    }
+
+    // Update roll
+    if (this.isRolling) {
+      this.rollTimer -= dt
+      if (this.rollTimer <= 0) {
+        this.isRolling = false
+      }
+    }
+
+    // Update reload
+    if (this.reloading) {
+      this.reloadTimer -= dt
+      if (this.reloadTimer <= 0) {
+        this.reloading = false
+        const weapon = this.getCurrentWeapon()
+        if (weapon) {
+          const needed = weapon.maxAmmo - weapon.ammo
+          const available = Math.min(needed, weapon.reserveAmmo)
+          weapon.ammo += available
+          weapon.reserveAmmo -= available
+        }
+      }
+    }
+
+    // Update knife cooldown
+    if (this.usingKnife) {
+      this.knifeTimer -= dt
+      if (this.knifeTimer <= 0) {
+        this.usingKnife = false
+      }
+    }
+
+    if (this.regenDelay > 0) {
+      this.regenDelay -= dt
+    } else if (this.health < this.maxHealth) {
+      this.health = Math.min(this.maxHealth, this.health + Player.REGEN_RATE * (dt / 1000))
+    }
+
+    // Update hit timer
+    if (this.hitTimer > 0) {
+      this.hitTimer -= dt
+    }
+
+    // Update recoil
+    if (Math.abs(this.recoilX) > 0.1 || Math.abs(this.recoilY) > 0.1) {
+      this.recoilX *= this.recoilDecay
+      this.recoilY *= this.recoilDecay
+    } else {
+      this.recoilX = 0
+      this.recoilY = 0
+    }
+
+    if (Math.abs(this.recoilAngle) > 0.001) {
+      this.recoilAngle *= this.recoilDecay
+    } else {
+      this.recoilAngle = 0
+    }
+
+    this.visualX += (this.x - this.visualX) * Player.VISUAL_SMOOTHING
+    this.visualY += (this.y - this.visualY) * Player.VISUAL_SMOOTHING
+  }
+
   render(ctx: CanvasRenderingContext2D) {
     ctx.save()
     ctx.translate(this.x, this.y)
@@ -405,6 +531,13 @@ export class Player {
     } else {
       ctx.fillStyle = "#4a90d9"
     }
+
+    // Visual effect during rolling (maybe make the player look different while rolling)
+    if (this.isRolling) {
+      // Change color slightly when rolling
+      ctx.fillStyle = "#3a70b9"
+    }
+
     ctx.beginPath()
     ctx.arc(0, 0, this.radius, 0, Math.PI * 2)
     ctx.fill()

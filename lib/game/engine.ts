@@ -207,6 +207,18 @@ export class GameEngine {
 
     if (e.key.toLowerCase() === "g") this.throwGrenade("frag")
     if (e.key.toLowerCase() === "f") this.throwGrenade("stun")
+
+    // Roll with Shift key
+    if (e.key === "Shift") {
+      // Use current movement direction for roll
+      let dx = 0, dy = 0
+      if (this.keys.has("w") || this.keys.has("arrowup")) dy -= 1
+      if (this.keys.has("s") || this.keys.has("arrowdown")) dy += 1
+      if (this.keys.has("a") || this.keys.has("arrowleft")) dx -= 1
+      if (this.keys.has("d") || this.keys.has("arrowright")) dx += 1
+
+      this.player.roll(dx, dy)
+    }
   }
 
   private handleKeyUp = (e: KeyboardEvent) => {
@@ -809,6 +821,18 @@ export class GameEngine {
     }
     this.points += pointsEarned
 
+    // Add floating text for points earned above the player
+    this.floatingTextSystem.addText(
+      this.player.x,
+      this.player.y - 50, // Above player
+      `+${pointsEarned} pts`,
+      {
+        color: "#ffff00", // Yellow for points
+        size: 18,
+        velocityY: -120, // Move upward
+      }
+    )
+
     // Add kill to the kill feed
     let zombieType = "Zombie"
     if (zombie.isBoss) {
@@ -1106,13 +1130,15 @@ export class GameEngine {
 
     if (killEntries.length === 0) return
 
-    const startY = 100 // Start below the round info
+    const startY = 40 // Start from the top
     const spacing = 25
     const maxWidth = 350
+    const centerX = this.canvas.width / 2
+    const offsetX = maxWidth / 2 // To center the background
 
     // Draw a semi-transparent background for the kill feed
     this.ctx.fillStyle = "rgba(0, 0, 0, 0.6)"
-    this.ctx.fillRect(20, startY - 10, maxWidth, killEntries.length * spacing + 20)
+    this.ctx.fillRect(centerX - offsetX, startY - 10, maxWidth, killEntries.length * spacing + 20)
 
     this.ctx.fillStyle = "#ffffff"
     this.ctx.font = "14px 'Geist', sans-serif"
@@ -1121,19 +1147,20 @@ export class GameEngine {
     // Render each kill entry
     killEntries.forEach((entry, index) => {
       const y = startY + index * spacing
+      const textOffsetX = centerX - offsetX // Align text to the left of the centered background
 
       // Draw the kill message
       this.ctx.fillStyle = "#ffcc00" // Yellow for player
-      this.ctx.fillText("You", 30, y)
+      this.ctx.fillText("You", textOffsetX + 10, y)
 
       this.ctx.fillStyle = "#aaaaaa" // Gray for weapon
-      this.ctx.fillText("killed", 80, y)
+      this.ctx.fillText("killed", textOffsetX + 60, y)
 
       this.ctx.fillStyle = "#ff6666" // Red for zombie
-      this.ctx.fillText(entry.victim, 140, y)
+      this.ctx.fillText(entry.victim, textOffsetX + 120, y)
 
       this.ctx.fillStyle = "#44aaff" // Blue for weapon
-      this.ctx.fillText(`with ${entry.weapon}`, 200, y)
+      this.ctx.fillText(`with ${entry.weapon}`, textOffsetX + 180, y)
     })
   }
 
@@ -1233,6 +1260,9 @@ export class GameEngine {
       powerUpTimer: this.powerUpTimer,
       fragGrenade: this.player.fragGrenade,
       stunGrenade: this.player.stunGrenade,
+      rollCooldown: this.player.getRollCooldown(),
+      rollCooldownPercent: this.player.getRollCooldownPercent(),
+      isRollReady: this.player.isRollReady(),
     })
   }
 
@@ -1276,6 +1306,7 @@ export class GameEngine {
       }
       if (gpState.buttons.prevWeapon) this.throwGrenade("stun")
       if (gpState.buttons.nextWeapon) this.throwGrenade("frag")
+      if (gpState.buttons.roll) this.player.roll(gpState.leftStick.x, gpState.leftStick.y)
     }
 
     if (this.mouse.down) {

@@ -18,6 +18,9 @@ interface HUDData {
   powerUpTimer: number
   fragGrenade: number
   stunGrenade: number
+  rollCooldown: number
+  rollCooldownPercent: number
+  isRollReady: boolean
 }
 
 const PERK_ICONS: Record<string, { icon: React.ReactNode; color: string }> = {
@@ -109,6 +112,15 @@ export function GameHUD({ data }: { data: HUDData }) {
                 {data.stunGrenade}
               </span>
               <span className="text-zinc-600 text-xs">F</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className={`p-1.5 rounded ${data.isRollReady ? "bg-purple-600" : "bg-zinc-800/50"}`}>
+                <Footprints className={`w-4 h-4 ${data.isRollReady ? "text-purple-200" : "text-zinc-600"}`} />
+              </div>
+              <span className={`text-sm font-bold ${data.isRollReady ? "text-purple-400" : "text-zinc-600"}`}>
+                {data.isRollReady ? "0" : Math.ceil(data.rollCooldown / 1000)}
+              </span>
+              <span className="text-zinc-600 text-xs">Shift</span>
             </div>
           </div>
         </div>
