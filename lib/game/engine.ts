@@ -6,7 +6,7 @@ import { GameMap } from "./map"
 import { WallBuy, MysteryBox, VendingMachine, MaxAmmoBox } from "./interactables"
 import { PowerUp, type PowerUpType } from "./entities/power-up"
 import { WEAPONS, type WeaponData } from "./weapons"
-import { AudioManager } from "./audio"
+import { AudioManager, type SoundType } from "./audio"
 import { GamepadManager } from "./gamepad"
 import { ParticleSystem } from "./particles"
 import { FloatingTextSystem } from "./floating-text"
@@ -54,6 +54,10 @@ export class GameEngine {
   private targetZoom = 1.0
   private static MIN_ZOOM = 0.7
   private static ZOOM_SMOOTHING = 0.05
+
+  // Countdown properties for game start
+  private startCountdown = 0
+  private isCountdownActive = false
 
   private activePowerUp: PowerUpType | null = null
   private powerUpTimer = 0
@@ -145,6 +149,14 @@ export class GameEngine {
     this.canvas.addEventListener("mouseup", this.handleMouseUp)
     this.canvas.addEventListener("wheel", this.handleWheel)
     this.canvas.addEventListener("contextmenu", (e) => e.preventDefault())
+  }
+
+  private startNewRoundCountdown() {
+    // Only start countdown for round 1
+    if (this.round === 1) {
+      this.startCountdown = 3000 // 3 seconds in milliseconds
+      this.isCountdownActive = true
+    }
   }
 
   private handleKeyDown = (e: KeyboardEvent) => {
@@ -240,18 +252,27 @@ export class GameEngine {
 
   private handleInteraction() {
     const nearbyDoor = this.gameMap.getDoorNear(this.player.x, this.player.y)
-    if (nearbyDoor && !nearbyDoor.isOpen && this.points >= nearbyDoor.cost) {
-      this.points -= nearbyDoor.cost
-      this.gameMap.purchaseDoor(nearbyDoor.id)
-      this.audio.play("doorSound") // Using the new door sound
-      this.triggerScreenShake(3)
-      return
+    if (nearbyDoor && !nearbyDoor.isOpen) {
+      if (this.points >= nearbyDoor.cost) {
+        this.points -= nearbyDoor.cost
+        this.gameMap.purchaseDoor(nearbyDoor.id)
+        this.audio.play("doorSound") // Using the new door sound
+        this.triggerScreenShake(3)
+        return
+      } else {
+        // Player doesn't have enough money for the door
+        this.audio.play("doorLocked")
+        return
+      }
     }
 
     for (const wallBuy of this.wallBuys) {
       if (wallBuy.isNear(this.player.x, this.player.y)) {
         if (this.points >= wallBuy.cost) {
           this.tryBuyWeapon(wallBuy.weapon, wallBuy.cost)
+        } else {
+          // Player doesn't have enough money for the weapon
+          this.audio.play("cantBuy")
         }
         return
       }
@@ -267,6 +288,9 @@ export class GameEngine {
           const randomMysterySound = mysterySounds[Math.floor(Math.random() * mysterySounds.length)];
           this.audio.play(randomMysterySound)
           this.tryBuyWeapon(weapon, 0)
+        } else {
+          // Player doesn't have enough money for the mystery box
+          this.audio.play("cantBuy")
         }
         return
       }
@@ -281,6 +305,9 @@ export class GameEngine {
           const vendingSounds = ["vendingMachine", "vending1", "vending2"];
           const randomVendingSound = vendingSounds[Math.floor(Math.random() * vendingSounds.length)];
           this.audio.play(randomVendingSound)
+        } else if (this.points < machine.cost) {
+          // Player doesn't have enough money for the vending machine perk
+          this.audio.play("cantBuy")
         }
         return
       }
@@ -292,6 +319,9 @@ export class GameEngine {
           this.points -= ammoBox.cost
           this.player.maxAmmo()
           this.audio.play("powerUp")
+        } else {
+          // Player doesn't have enough money for the max ammo
+          this.audio.play("cantBuy")
         }
         return
       }
@@ -301,6 +331,12 @@ export class GameEngine {
   start() {
     this.isRunning = true
     this.lastTime = performance.now()
+
+    // Initialize start countdown for round 1 if not already active
+    if (this.round === 1 && !this.isCountdownActive) {
+      this.startNewRoundCountdown()
+    }
+
     this.gameLoop()
   }
 
@@ -340,6 +376,10 @@ export class GameEngine {
     this.floatingTextSystem.clear()
     this.killFeedSystem.clear()
 
+    // Reset countdown state
+    this.startCountdown = 0
+    this.isCountdownActive = false
+
     for (const box of this.mysteryBoxes) {
       box.reset()
     }
@@ -366,6 +406,28 @@ export class GameEngine {
 
     if (gpState.buttons.pause) {
       this.onPauseToggle()
+    }
+
+    // Handle start countdown
+    if (this.isCountdownActive) {
+      this.startCountdown -= dt;
+      // Play start sound only once when countdown begins for round 1
+      if (this.startCountdown >= 2999 && this.round === 1) { // Approximately at the start
+        const startSounds = [
+          "start1",
+          "start2",
+          "start3"
+        ];
+        const randomStartSound = startSounds[Math.floor(Math.random() * startSounds.length)];
+        this.audio.play(randomStartSound);
+      }
+
+      if (this.startCountdown <= 0) {
+        this.startCountdown = 0;
+        this.isCountdownActive = false;
+      }
+      this.updateCameraAndZoom(dt);
+      return;
     }
 
     if (this.roundTransition) {
@@ -801,6 +863,30 @@ export class GameEngine {
     // Render kill feed
     this.renderKillFeed()
 
+    // Render start countdown if active
+    if (this.isCountdownActive) {
+      const secondsLeft = Math.ceil(this.startCountdown / 1000);
+      let displayText = "";
+      let color = "";
+
+      if (secondsLeft > 0) {
+        displayText = secondsLeft.toString();
+        color = "#ffffff"; // White
+      } else {
+        displayText = "GO!";
+        color = "#00ff00"; // Green
+      }
+
+      this.ctx.fillStyle = "rgba(0, 0, 0, 0.6)"; // Semi-transparent black background
+      this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+      this.ctx.fillStyle = color;
+      this.ctx.font = "bold 120px sans-serif";
+      this.ctx.textAlign = "center";
+      this.ctx.textBaseline = "middle";
+      this.ctx.fillText(displayText, this.canvas.width / 2, this.canvas.height / 2);
+    }
+
     if (this.roundTransition) {
       this.ctx.fillStyle = "rgba(0, 0, 0, 0.5)"
       this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height)
@@ -1037,6 +1123,12 @@ export class GameEngine {
   }
 
   private tryBuyWeapon(weapon: WeaponData, cost: number) {
+    if (this.points < cost) {
+      // Player doesn't have enough money for the weapon
+      this.audio.play("cantBuy")
+      return
+    }
+
     if (this.player.weapons.length >= 2) {
       this.pendingWeaponPurchase = { weapon, cost }
       this.showWeaponSwap(weapon, cost)
@@ -1066,5 +1158,9 @@ export class GameEngine {
 
   toggleMusic(enabled: boolean) {
     this.audio.toggleMusic(enabled);
+  }
+
+  playSound(sound: SoundType) {
+    this.audio.play(sound);
   }
 }

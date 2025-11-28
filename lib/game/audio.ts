@@ -1,4 +1,4 @@
-type SoundType =
+export type SoundType =
   | "shoot"
   | "reload"
   | "pistolShoot"
@@ -56,6 +56,13 @@ type SoundType =
   | "instaKill"
   | "maxAmmo"
   | "throwGrenade"
+  | "pause1"
+  | "pause2"
+  | "start1"
+  | "start2"
+  | "start3"
+  | "doorLocked"
+  | "cantBuy"
 
 type AudioType = "sound" | "music";
 
@@ -146,6 +153,13 @@ export class AudioManager {
       instaKill: "/audio/sounds/insta-kill.mp3",
       maxAmmo: "/audio/sounds/max-ammo.mp3",
       throwGrenade: "/audio/sounds/throw.mp3",
+      pause1: "/audio/sounds/pause-1.mp3",
+      pause2: "/audio/sounds/pause-2.mp3",
+      start1: "/audio/sounds/start-1.mp3",
+      start2: "/audio/sounds/start-2.mp3",
+      start3: "/audio/sounds/start-3.mp3",
+      doorLocked: "/audio/sounds/door-locked.mp3",
+      cantBuy: "/audio/sounds/cant-buy.mp3",
     };
 
     const src = soundMap[soundType];

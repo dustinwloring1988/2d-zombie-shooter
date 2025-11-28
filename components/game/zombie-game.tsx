@@ -91,6 +91,13 @@ export default function ZombieGame() {
 
   const togglePauseMenu = useCallback(() => {
     if (gameState === "playing") {
+      // Play a random pause sound
+      if (gameEngineRef.current) {
+        const pauseSounds: ("pause1" | "pause2")[] = ["pause1", "pause2"];
+        const randomPauseSound = pauseSounds[Math.floor(Math.random() * pauseSounds.length)];
+        gameEngineRef.current.playSound(randomPauseSound);
+      }
+
       setShowPauseMenu((prev) => !prev)
     }
   }, [gameState])
