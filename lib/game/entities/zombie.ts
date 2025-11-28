@@ -27,6 +27,7 @@ export class Zombie {
   private readonly attackRate = 1000
 
   private stunTimer = 0
+  private burnTimer = 0
   private baseSpeed: number
 
   // Hit effect properties
@@ -62,6 +63,14 @@ export class Zombie {
 
   isStunned(): boolean {
     return this.stunTimer > 0
+  }
+
+  burn(duration: number) {
+    this.burnTimer = Math.max(this.burnTimer, duration)
+  }
+
+  isBurning(): boolean {
+    return this.burnTimer > 0
   }
 
   private seek(targetX: number, targetY: number): SteeringForce {
@@ -258,6 +267,15 @@ export class Zombie {
     if (this.hitTimer > 0) {
       this.hitTimer -= dt
     }
+
+    // Update burn timer and apply periodic damage
+    if (this.burnTimer > 0) {
+      this.burnTimer -= dt
+      // Apply damage every 500ms while burning
+      if (this.burnTimer > 0 && dt % 500 < dt) {
+        // We'll apply burn damage in the engine, not here to maintain consistency
+      }
+    }
   }
 
   canAttack(): boolean {
@@ -300,6 +318,8 @@ export class Zombie {
 
     if (this.stunTimer > 0) {
       bodyColor = "#6699ff" // Blue tint when stunned
+    } else if (this.burnTimer > 0) {
+      bodyColor = "#ff4500" // Orange-red tint when burning
     }
 
     // White flash when hit
@@ -363,6 +383,27 @@ export class Zombie {
       ctx.lineTo(this.x + 10, this.y - this.radius - 20)
       ctx.lineTo(this.x + 15, this.y - this.radius - 10)
       ctx.fill()
+    }
+
+    // Burn effect (flickering flames) when burning
+    if (this.burnTimer > 0) {
+      const time = Date.now() / 100; // For flame animation
+      const flameCount = 8; // Number of flame particles
+      for (let i = 0; i < flameCount; i++) {
+        const angle = (i / flameCount) * Math.PI * 2;
+        const distance = this.radius + 5 + Math.sin(time + i) * 3;
+        const x = this.x + Math.cos(angle) * distance;
+        const y = this.y + Math.sin(angle) * distance;
+
+        // Draw flame particles
+        const size = 3 + Math.sin(time * 2 + i) * 2;
+        const alpha = 0.7 + Math.sin(time * 3 + i) * 0.3;
+
+        ctx.beginPath();
+        ctx.arc(x, y, size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, ${100 + Math.sin(time * 2) * 50}, 0, ${alpha})`;
+        ctx.fill();
+      }
     }
   }
 }

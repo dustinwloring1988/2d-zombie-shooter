@@ -24,6 +24,8 @@ export class Player {
 
   fragGrenade = 0
   stunGrenade = 0
+  molotovGrenade = 0
+  discoGrenade = 0
   static MAX_GRENADES = 1
 
   perks: string[] = []
@@ -71,7 +73,7 @@ export class Player {
   // For muzzle flash effects
   onMuzzleFlash?: (x: number, y: number, angle: number) => void
 
-  constructor(x: number, y: number) {
+  constructor(x: number, y: number, characterType: "default" | "magician" = "default") {
     this.x = x
     this.y = y
     this.visualX = x
@@ -83,8 +85,15 @@ export class Player {
       reserveAmmo: WEAPONS.pistol.reserveAmmo,
     })
 
-    this.fragGrenade = 1
-    this.stunGrenade = 1
+    if (characterType === "magician") {
+      // Magician starts with disco ball and molotov instead of stun and frag
+      this.discoGrenade = 1
+      this.molotovGrenade = 1
+    } else {
+      // Default player starts with frag and stun
+      this.fragGrenade = 1
+      this.stunGrenade = 1
+    }
   }
 
   getHealthRatio(): number {
@@ -382,29 +391,73 @@ export class Player {
   }
 
   throwGrenade(targetX: number, targetY: number, type: GrenadeType): Grenade | null {
-    if (type === "frag" && this.fragGrenade > 0) {
-      this.fragGrenade--
-      return new Grenade(this.x, this.y, targetX, targetY, "frag")
-    } else if (type === "stun" && this.stunGrenade > 0) {
-      this.stunGrenade--
-      return new Grenade(this.x, this.y, targetX, targetY, "stun")
+    switch (type) {
+      case "frag":
+        if (this.fragGrenade > 0) {
+          this.fragGrenade--
+          return new Grenade(this.x, this.y, targetX, targetY, "frag")
+        }
+        break
+      case "stun":
+        if (this.stunGrenade > 0) {
+          this.stunGrenade--
+          return new Grenade(this.x, this.y, targetX, targetY, "stun")
+        }
+        break
+      case "molotov":
+        if (this.molotovGrenade > 0) {
+          this.molotovGrenade--
+          return new Grenade(this.x, this.y, targetX, targetY, "molotov")
+        }
+        break
+      case "disco":
+        if (this.discoGrenade > 0) {
+          this.discoGrenade--
+          return new Grenade(this.x, this.y, targetX, targetY, "disco")
+        }
+        break
     }
     return null
   }
 
   addGrenade(type: GrenadeType): boolean {
-    if (type === "frag" && this.fragGrenade < Player.MAX_GRENADES) {
-      this.fragGrenade++
-      return true
-    } else if (type === "stun" && this.stunGrenade < Player.MAX_GRENADES) {
-      this.stunGrenade++
-      return true
+    switch (type) {
+      case "frag":
+        if (this.fragGrenade < Player.MAX_GRENADES) {
+          this.fragGrenade++
+          return true
+        }
+        break
+      case "stun":
+        if (this.stunGrenade < Player.MAX_GRENADES) {
+          this.stunGrenade++
+          return true
+        }
+        break
+      case "molotov":
+        if (this.molotovGrenade < Player.MAX_GRENADES) {
+          this.molotovGrenade++
+          return true
+        }
+        break
+      case "disco":
+        if (this.discoGrenade < Player.MAX_GRENADES) {
+          this.discoGrenade++
+          return true
+        }
+        break
     }
     return false
   }
 
   hasGrenade(type: GrenadeType): boolean {
-    return type === "frag" ? this.fragGrenade > 0 : this.stunGrenade > 0
+    switch (type) {
+      case "frag": return this.fragGrenade > 0
+      case "stun": return this.stunGrenade > 0
+      case "molotov": return this.molotovGrenade > 0
+      case "disco": return this.discoGrenade > 0
+      default: return false
+    }
   }
 
   getRollCooldown(): number {

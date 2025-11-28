@@ -30,6 +30,7 @@ export class GameEngine {
   private maxMysteryBoxUses: number = 0
   private vendingMachines: VendingMachine[] = []
   private maxAmmoBoxes: MaxAmmoBox[] = []
+  private burnDamageTimers: Map<Zombie, number> = new Map()
 
   private round = 1
   private zombiesSpawned = 0
@@ -88,6 +89,7 @@ export class GameEngine {
     onGameOver: () => void,
     onPauseToggle: () => void = () => {},
     mapType: "level1" | "level2" | "level3" = "level1",
+    characterType: "default" | "magician" = "default",
   ) {
     this.canvas = canvas
     this.ctx = canvas.getContext("2d")!
@@ -105,7 +107,7 @@ export class GameEngine {
     } else {
       this.gameMap = new GameMap(2400, 2400);
     }
-    this.player = new Player(this.gameMap.width / 2, this.gameMap.height / 2)
+    this.player = new Player(this.gameMap.width / 2, this.gameMap.height / 2, characterType)
     this.audio = new AudioManager()
 
     this.gamepad = new GamepadManager()
@@ -205,8 +207,23 @@ export class GameEngine {
 
     if (e.key === "Escape") this.onPauseToggle()
 
-    if (e.key.toLowerCase() === "g") this.throwGrenade("frag")
-    if (e.key.toLowerCase() === "f") this.throwGrenade("stun")
+    // G key throws the available standard grenade (frag or molotov)
+    if (e.key.toLowerCase() === "g") {
+      if (this.player.hasGrenade("molotov")) {
+        this.throwGrenade("molotov");
+      } else {
+        this.throwGrenade("frag");
+      }
+    }
+
+    // F key throws the available special grenade (stun or disco)
+    if (e.key.toLowerCase() === "f") {
+      if (this.player.hasGrenade("disco")) {
+        this.throwGrenade("disco");
+      } else {
+        this.throwGrenade("stun");
+      }
+    }
 
     // Roll with Shift key
     if (e.key === "Shift") {
@@ -500,7 +517,7 @@ export class GameEngine {
     this.restartWithMap("level1");
   }
 
-  restartWithMap(mapType: "level1" | "level2" | "level3" = "level1") {
+  restartWithMap(mapType: "level1" | "level2" | "level3" = "level1", characterType: "default" | "magician" = "default") {
     if (mapType === "level2") {
       this.gameMap = new GameMapLevel2(2400, 2400);
     } else if (mapType === "level3") {
@@ -509,7 +526,7 @@ export class GameEngine {
       this.gameMap = new GameMap(2400, 2400);
     }
 
-    this.player = new Player(this.gameMap.width / 2, this.gameMap.height / 2)
+    this.player = new Player(this.gameMap.width / 2, this.gameMap.height / 2, characterType)
     this.zombies = []
     this.bullets = []
     this.grenades = []
@@ -528,6 +545,9 @@ export class GameEngine {
     // Reset mystery box tracking
     this.mysteryBoxUses = 0;
     this.maxMysteryBoxUses = 0; // Will be set based on random value between 3-6 when needed
+
+    // Clear burn damage timers
+    this.burnDamageTimers.clear();
 
     this.particleSystem.clear()
     this.floatingTextSystem.clear()
@@ -696,6 +716,38 @@ export class GameEngine {
     for (let i = this.zombies.length - 1; i >= 0; i--) {
       const zombie = this.zombies[i]
       zombie.moveToward(this.player.x, this.player.y, dt, this.gameMap, this.zombies)
+
+      // Apply burn damage if the zombie is burning
+      if (zombie.isBurning()) {
+        // Apply burn damage every 500ms
+        if (this.burnDamageTimers?.get(zombie) || 0 <= 0) {
+          zombie.takeDamage(5); // Tick damage for burning
+          this.burnDamageTimers.set(zombie, 500); // Reset timer for next damage tick
+
+          // Add floating text for burn damage
+          this.floatingTextSystem.addText(
+            zombie.x,
+            zombie.y - 30, // Above the zombie
+            "5",
+            {
+              color: "#ff4500", // Orange-red for burn damage
+              size: 14,
+            }
+          );
+
+          // Check if zombie died from burn damage
+          if (zombie.health <= 0) {
+            this.handleZombieDeath(zombie)
+            this.zombies.splice(i, 1)
+            this.zombiesKilled++
+            continue; // Skip the rest of the loop for this zombie
+          }
+        } else {
+          // Update the timer
+          const currentTimer = this.burnDamageTimers.get(zombie) || 0;
+          this.burnDamageTimers.set(zombie, currentTimer - dt);
+        }
+      }
 
       const dist = Math.hypot(zombie.x - this.player.x, zombie.y - this.player.y)
       if (dist < zombie.radius + this.player.radius) {
@@ -985,18 +1037,52 @@ export class GameEngine {
                 this.zombies.splice(j, 1)
                 this.zombiesKilled++
               }
+            } else if (grenade.type === "molotov") {
+              // Molotov causes burning damage over time
+              const damageMultiplier = 1 - dist / explosionRadius
+              const explosionDamage = damage * damageMultiplier
+              zombie.takeDamage(explosionDamage)
+
+              // Add visual burn effect
+              zombie.burn(2000) // Burn for 2 seconds
+
+              // Add floating text for damage
+              this.floatingTextSystem.addText(
+                zombie.x,
+                zombie.y - 30, // Above the zombie
+                Math.floor(explosionDamage).toString(),
+                {
+                  color: "#ff4500", // Orange-red for molotov damage
+                  size: 16,
+                }
+              )
+
+              if (zombie.health <= 0) {
+                this.handleZombieDeath(zombie)
+                this.zombies.splice(j, 1)
+                this.zombiesKilled++
+              }
             } else {
-              // Stun effect
+              // Stun effects (for both "stun" and "disco" types)
               zombie.stun(stunDuration)
             }
           }
         }
 
-        this.triggerScreenShake(grenade.type === "frag" ? 15 : 8)
-        if (grenade.type === "frag") {
-          this.audio.play("fragExplosion")
-        } else {
-          this.audio.play("stunExplosion")
+        this.triggerScreenShake(grenade.type === "frag" ? 15 : (grenade.type === "molotov" ? 12 : 8))
+        switch (grenade.type) {
+          case "frag":
+            this.audio.play("fragExplosion")
+            break
+          case "stun":
+            this.audio.play("stunExplosion")
+            break
+          case "molotov":
+            this.audio.play("molotovExplosion")
+            break
+          case "disco":
+            this.audio.play("discoExplosion")
+            break
         }
         this.grenades.splice(i, 1)
       }
@@ -1260,6 +1346,8 @@ export class GameEngine {
       powerUpTimer: this.powerUpTimer,
       fragGrenade: this.player.fragGrenade,
       stunGrenade: this.player.stunGrenade,
+      molotovGrenade: this.player.molotovGrenade,
+      discoGrenade: this.player.discoGrenade,
       rollCooldown: this.player.getRollCooldown(),
       rollCooldownPercent: this.player.getRollCooldownPercent(),
       isRollReady: this.player.isRollReady(),
@@ -1304,8 +1392,21 @@ export class GameEngine {
         this.player.switchWeapon(prevIndex)
         this.audio.play("switchWeapons")
       }
-      if (gpState.buttons.prevWeapon) this.throwGrenade("stun")
-      if (gpState.buttons.nextWeapon) this.throwGrenade("frag")
+      // Gamepad controls use the same logic as keyboard (G and F)
+      if (gpState.buttons.prevWeapon) {
+        if (this.player.hasGrenade("disco")) {
+          this.throwGrenade("disco");
+        } else {
+          this.throwGrenade("stun");
+        }
+      }
+      if (gpState.buttons.nextWeapon) {
+        if (this.player.hasGrenade("molotov")) {
+          this.throwGrenade("molotov");
+        } else {
+          this.throwGrenade("frag");
+        }
+      }
       if (gpState.buttons.roll) this.player.roll(gpState.leftStick.x, gpState.leftStick.y)
     }
 

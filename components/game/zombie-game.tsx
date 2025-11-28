@@ -16,6 +16,7 @@ export default function ZombieGame() {
   const [gameState, setGameState] = useState<"menu" | "mapselect" | "playing" | "paused" | "gameover">("menu")
   const [showPauseMenu, setShowPauseMenu] = useState(false)
   const [selectedMap, setSelectedMap] = useState<"level1" | "level2" | "level3">("level1")
+  const [selectedCharacter, setSelectedCharacter] = useState<"default" | "magician">("default")
   const [hudData, setHudData] = useState({
     health: 100,
     maxHealth: 100,
@@ -117,7 +118,7 @@ export default function ZombieGame() {
     }
   }, []);
 
-  const startGame = useCallback((newSettings?: typeof settings) => {
+  const startGame = useCallback((newSettings?: typeof settings, characterType?: "default" | "magician") => {
     // First, show the map selector
     setGameState("mapselect")
 
@@ -125,9 +126,14 @@ export default function ZombieGame() {
     if (newSettings) {
       setSettings(newSettings);
     }
+
+    // Update character type if provided
+    if (characterType) {
+      setSelectedCharacter(characterType);
+    }
   }, [])
 
-  const selectAndStartGame = useCallback((mapId: "level1" | "level2" | "level3", currentSettings?: typeof settings) => {
+  const selectAndStartGame = useCallback((mapId: "level1" | "level2" | "level3", currentSettings?: typeof settings, characterType: "default" | "magician" = "default") => {
     setSelectedMap(mapId);
     setGameState("playing")
     setShowPauseMenu(false)
@@ -140,11 +146,12 @@ export default function ZombieGame() {
         triggerScreenShake,
         () => setGameState("gameover"),
         togglePauseMenu,
-        mapId // Pass the selected map to the game engine
+        mapId, // Pass the selected map to the game engine
+        characterType // Pass the selected character type to the game engine
       )
       gameEngineRef.current.start()
     } else if (gameEngineRef.current) {
-      gameEngineRef.current.restartWithMap(mapId) // Use the new method to restart with new map
+      gameEngineRef.current.restartWithMap(mapId, characterType) // Use the new method to restart with new map and character
     }
 
     // Stop trailer if it's playing
@@ -303,9 +310,14 @@ export default function ZombieGame() {
       </div>
 
       {gameState === "menu" && <StartScreen onStart={startGame} onPlayTrailer={handlePlayTrailer} />}
-      {gameState === "mapselect" && <MapSelector onSelectMap={(mapId) => selectAndStartGame(mapId, settings)} />}
+      {gameState === "mapselect" && <MapSelector onSelectMap={(mapId, characterType) => selectAndStartGame(mapId, settings, characterType || selectedCharacter)} characterType={selectedCharacter} />}
       {gameState === "gameover" && (
-        <GameOverScreen round={hudData.round} points={hudData.points} onRestart={() => startGame()} />
+        <GameOverScreen
+          round={hudData.round}
+          points={hudData.points}
+          onRestart={(characterType) => startGame(settings, characterType || selectedCharacter)}
+          characterType={selectedCharacter}
+        />
       )}
       {gameState === "playing" && (
         <>

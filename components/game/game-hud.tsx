@@ -18,6 +18,8 @@ interface HUDData {
   powerUpTimer: number
   fragGrenade: number
   stunGrenade: number
+  molotovGrenade: number
+  discoGrenade: number
   rollCooldown: number
   rollCooldownPercent: number
   isRollReady: boolean
@@ -114,6 +116,24 @@ export function GameHUD({ data }: { data: HUDData }) {
               <span className="text-zinc-600 text-xs">F</span>
             </div>
             <div className="flex items-center gap-2">
+              <div className={`p-1.5 rounded ${data.molotovGrenade > 0 ? "bg-orange-900/50" : "bg-zinc-800/50"}`}>
+                <Bomb className={`w-4 h-4 ${data.molotovGrenade > 0 ? "text-orange-500" : "text-zinc-600"}`} />
+              </div>
+              <span className={`text-sm font-bold ${data.molotovGrenade > 0 ? "text-orange-400" : "text-zinc-600"}`}>
+                {data.molotovGrenade}
+              </span>
+              <span className="text-zinc-600 text-xs">G</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className={`p-1.5 rounded ${data.discoGrenade > 0 ? "bg-purple-900/50" : "bg-zinc-800/50"}`}>
+                <Sparkles className={`w-4 h-4 ${data.discoGrenade > 0 ? "text-purple-400" : "text-zinc-600"}`} />
+              </div>
+              <span className={`text-sm font-bold ${data.discoGrenade > 0 ? "text-purple-400" : "text-zinc-600"}`}>
+                {data.discoGrenade}
+              </span>
+              <span className="text-zinc-600 text-xs">F</span>
+            </div>
+            <div className="flex items-center gap-2">
               <div className={`p-1.5 rounded ${data.isRollReady ? "bg-purple-600" : "bg-zinc-800/50"}`}>
                 <Footprints className={`w-4 h-4 ${data.isRollReady ? "text-purple-200" : "text-zinc-600"}`} />
               </div>
@@ -173,7 +193,7 @@ export function GameHUD({ data }: { data: HUDData }) {
 
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
         <div className="bg-black/50 rounded px-3 py-1 text-zinc-500 text-xs">
-          WASD Move | Mouse Aim | LMB Shoot | RMB Knife | Scroll Swap | R Reload | E Interact | G Frag | F Stun
+          WASD Move | Mouse Aim | LMB Shoot | RMB Knife | Scroll Swap | R Reload | E Interact | G Grenade | F Stun/Disco
         </div>
       </div>
     </div>

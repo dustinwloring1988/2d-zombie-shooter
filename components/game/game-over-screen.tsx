@@ -5,10 +5,11 @@ import { Skull, RotateCcw } from "lucide-react"
 interface GameOverScreenProps {
   round: number
   points: number
-  onRestart: () => void
+  onRestart: (characterType?: "default" | "magician") => void
+  characterType?: "default" | "magician";
 }
 
-export function GameOverScreen({ round, points, onRestart }: GameOverScreenProps) {
+export function GameOverScreen({ round, points, onRestart, characterType }: GameOverScreenProps) {
   return (
     <div className="absolute inset-0 bg-black/90 flex flex-col items-center justify-center">
       <div className="text-center">
@@ -29,7 +30,7 @@ export function GameOverScreen({ round, points, onRestart }: GameOverScreenProps
         </div>
 
         <button
-          onClick={onRestart}
+          onClick={() => onRestart(characterType)}
           className="group relative bg-red-600 hover:bg-red-500 text-white font-black text-xl px-10 py-4 rounded-lg transition-all transform hover:scale-105 active:scale-95"
         >
           <div className="flex items-center gap-3">

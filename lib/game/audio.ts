@@ -50,6 +50,8 @@ export type SoundType =
   | "gameOver2"
   | "fragExplosion"
   | "stunExplosion"
+  | "molotovExplosion"
+  | "discoExplosion"
   | "nukeExplosion"
   | "kaboom"
   | "doublePoints"
@@ -63,6 +65,20 @@ export type SoundType =
   | "start3"
   | "doorLocked"
   | "cantBuy"
+  | "characterSelection"
+  | "magicianSelection"
+  | "menuButton1"
+  | "menuButton2"
+  | "menuButton3"
+  | "startButton1"
+  | "startButton2"
+  | "startButton3"
+  | "turnPage1"
+  | "turnPage2"
+  | "levelSelection"
+  | "levelComplex"
+  | "levelCompound"
+  | "levelFortress"
 
 type AudioType = "sound" | "music";
 
@@ -147,6 +163,8 @@ export class AudioManager {
       gameOver2: "/audio/sounds/game-over-2.mp3",
       fragExplosion: "/audio/sounds/generic-gernade-explode.mp3",
       stunExplosion: "/audio/sounds/generic-stun-explode.mp3",
+      molotovExplosion: "/audio/sounds/molotov-explode.mp3",
+      discoExplosion: "/audio/sounds/disco-1.mp3",
       nukeExplosion: "/audio/sounds/kaboom.mp3",
       kaboom: "/audio/sounds/kaboom.mp3",
       doublePoints: "/audio/sounds/double-points.mp3",
@@ -160,6 +178,20 @@ export class AudioManager {
       start3: "/audio/sounds/start-3.mp3",
       doorLocked: "/audio/sounds/door-locked.mp3",
       cantBuy: "/audio/sounds/cant-buy.mp3",
+      characterSelection: "/audio/sounds/character-selection.mp3",
+      magicianSelection: "/audio/sounds/magician-selection.mp3",
+      menuButton1: "/audio/sounds/menu-button-1.mp3",
+      menuButton2: "/audio/sounds/menu-button-2.mp3",
+      menuButton3: "/audio/sounds/menu-button-3.mp3",
+      startButton1: "/audio/sounds/start-button-1.mp3",
+      startButton2: "/audio/sounds/start-button-2.mp3",
+      startButton3: "/audio/sounds/start-button-3.mp3",
+      turnPage1: "/audio/sounds/turn-page-1.mp3",
+      turnPage2: "/audio/sounds/turn-page-2.mp3",
+      levelSelection: "/audio/sounds/level-complex.mp3",
+      levelComplex: "/audio/sounds/level-complex.mp3",
+      levelCompound: "/audio/sounds/level-compound.mp3",
+      levelFortress: "/audio/sounds/level-fortress.mp3",
     };
 
     const src = soundMap[soundType];

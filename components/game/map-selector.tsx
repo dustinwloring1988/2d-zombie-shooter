@@ -2,10 +2,11 @@ import { useState, useEffect } from "react";
 import { MapPin, Zap, Shield, Skull } from "lucide-react";
 
 interface MapSelectorProps {
-  onSelectMap: (mapId: "level1" | "level2") => void;
+  onSelectMap: (mapId: "level1" | "level2" | "level3", characterType?: "default" | "magician") => void;
+  characterType?: "default" | "magician";
 }
 
-export function MapSelector({ onSelectMap }: MapSelectorProps) {
+export function MapSelector({ onSelectMap, characterType = "default" }: MapSelectorProps) {
   const [selectedMap, setSelectedMap] = useState<"level1" | "level2" | "level3" | null>(null);
 
   const maps = [
@@ -38,7 +39,7 @@ export function MapSelector({ onSelectMap }: MapSelectorProps) {
 
   const handleConfirm = () => {
     if (selectedMap) {
-      onSelectMap(selectedMap);
+      onSelectMap(selectedMap, characterType);
     }
   };
 

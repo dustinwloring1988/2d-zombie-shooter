@@ -1,9 +1,10 @@
 "use client"
 
 import { useState, useEffect } from "react";
-import { Skull, Play, BookOpen, Settings } from "lucide-react"
+import { Skull, Play, BookOpen, Settings, Sparkles, Sword } from "lucide-react"
 import { GuideGallery } from "./guide-gallery";
 import { SettingsModal } from "./settings-modal";
+import { CharacterSelector } from "./character-selector";
 
 interface StartScreenProps {
   onStart: (settings: {
@@ -12,7 +13,7 @@ interface StartScreenProps {
     soundVolume: number;
     screenShakeEnabled: boolean;
     fpsOverlayEnabled: boolean;
-  }) => void
+  }, characterType?: "default" | "magician") => void
   onPlayTrailer?: () => void
 }
 
@@ -21,6 +22,7 @@ export function StartScreen({ onStart, onPlayTrailer }: StartScreenProps) {
   const [trailerPlaying, setTrailerPlaying] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showCharacterSelector, setShowCharacterSelector] = useState(false);
 
   // Initialize settings with default values
   const [settings, setSettings] = useState({
@@ -117,17 +119,9 @@ export function StartScreen({ onStart, onPlayTrailer }: StartScreenProps) {
           </button>
 
           <button
-            onClick={async () => {
-              // Stop trailer if playing before starting game
-              if (trailerPlaying && onPlayTrailer) {
-                // Call the same function to handle stopping since it has the logic
-                await onPlayTrailer(); // This will handle stopping the trailer
-              }
-              // Reset trailer playing state
-              setTrailerPlaying(false);
-              setSkullClicks([]); // Also reset clicks
-              // Pass current settings to the game
-              onStart(settings);
+            onClick={() => {
+              // Show character selector instead of starting the game directly
+              setShowCharacterSelector(true);
             }}
             className="group relative bg-red-600 hover:bg-red-500 text-white font-black text-xl px-6 py-4 rounded-lg transition-all transform hover:scale-105 active:scale-95"
           >
@@ -169,6 +163,23 @@ export function StartScreen({ onStart, onPlayTrailer }: StartScreenProps) {
         settings={settings}
         onSave={setSettings}
       />
+      {showCharacterSelector && (
+        <CharacterSelector
+          onSelect={(characterType) => {
+            // Stop trailer if playing before starting game
+            if (trailerPlaying && onPlayTrailer) {
+              onPlayTrailer(); // This will handle stopping the trailer
+            }
+            // Reset trailer playing state
+            setTrailerPlaying(false);
+            setSkullClicks([]); // Also reset clicks
+            // Pass current settings and selected character to the game
+            onStart(settings, characterType);
+            setShowCharacterSelector(false);
+          }}
+          onCancel={() => setShowCharacterSelector(false)}
+        />
+      )}
     </div>
   )
 }
