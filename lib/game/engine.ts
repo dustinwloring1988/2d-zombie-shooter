@@ -152,11 +152,11 @@ export class GameEngine {
 
     if (e.key === "1") {
       this.player.switchWeapon(0)
-      this.audio.play("wallBuy1")
+      this.audio.play("switchWeapons")
     }
     if (e.key === "2" && this.player.weapons.length > 1) {
       this.player.switchWeapon(1)
-      this.audio.play("wallBuy2")
+      this.audio.play("switchWeapons")
     }
 
     if (e.key.toLowerCase() === "r") this.player.reload()
@@ -199,17 +199,20 @@ export class GameEngine {
     if (e.deltaY > 0) {
       const nextIndex = (this.player.currentWeaponIndex + 1) % this.player.weapons.length
       this.player.switchWeapon(nextIndex)
-      this.audio.play("wallBuy1")
+      this.audio.play("switchWeapons")
     } else {
       const prevIndex = (this.player.currentWeaponIndex - 1 + this.player.weapons.length) % this.player.weapons.length
       this.player.switchWeapon(prevIndex)
-      this.audio.play("wallBuy2")
+      this.audio.play("switchWeapons")
     }
   }
 
   private handleKnifeAttack() {
     const knifeDamage = 150
     const knifeRange = 60
+
+    // Play knife attack sound
+    this.audio.play("knifeAttack")
 
     for (let i = this.zombies.length - 1; i >= 0; i--) {
       const zombie = this.zombies[i]
@@ -240,7 +243,7 @@ export class GameEngine {
     if (nearbyDoor && !nearbyDoor.isOpen && this.points >= nearbyDoor.cost) {
       this.points -= nearbyDoor.cost
       this.gameMap.purchaseDoor(nearbyDoor.id)
-      this.audio.play("doorOpen")
+      this.audio.play("doorSound") // Using the new door sound
       this.triggerScreenShake(3)
       return
     }
@@ -259,7 +262,10 @@ export class GameEngine {
         if (this.points >= box.cost) {
           this.points -= box.cost
           const weapon = box.open()
-          this.audio.play("mysteryBox")
+          // Play a random mystery box sound
+          const mysterySounds = ["mysteryBox", "mysteryBox1", "mysteryBox2", "mysteryBox3"];
+          const randomMysterySound = mysterySounds[Math.floor(Math.random() * mysterySounds.length)];
+          this.audio.play(randomMysterySound)
           this.tryBuyWeapon(weapon, 0)
         }
         return
@@ -271,7 +277,10 @@ export class GameEngine {
         if (this.points >= machine.cost && !this.player.perks.includes(machine.perkType)) {
           this.points -= machine.cost
           this.player.addPerk(machine.perkType)
-          this.audio.play("vendingMachine")
+          // Play a random vending machine sound
+          const vendingSounds = ["vendingMachine", "vending1", "vending2"];
+          const randomVendingSound = vendingSounds[Math.floor(Math.random() * vendingSounds.length)];
+          this.audio.play(randomVendingSound)
         }
         return
       }
@@ -392,7 +401,14 @@ export class GameEngine {
     if (this.zombiesSpawned >= this.zombiesToSpawn && this.zombies.length === 0 && !this.roundTransition) {
       this.roundTransition = true
       this.roundTransitionTimer = 3000
-      this.audio.play("roundEnd")
+      // Play a random won-round sound
+      const roundSounds = [
+        "wonRound1", "wonRound2", "wonRound3", "wonRound4", "wonRound5",
+        "wonRound6", "wonRound7", "wonRound8", "wonRound9", "wonRound10",
+        "wonRound11", "wonRound12", "wonRound13", "wonRound14", "wonRound15"
+      ];
+      const randomRoundSound = roundSounds[Math.floor(Math.random() * roundSounds.length)];
+      this.audio.play(randomRoundSound)
     }
 
     if (this.activePowerUp) {
@@ -417,6 +433,10 @@ export class GameEngine {
       if (dist < zombie.radius + this.player.radius) {
         if (zombie.canAttack()) {
           const damage = zombie.attack()
+          // Play a random zombie attack sound
+          const zombieAttackSounds = ["zombieAttack1", "zombieAttack2", "zombieAttack3"];
+          const randomZombieAttackSound = zombieAttackSounds[Math.floor(Math.random() * zombieAttackSounds.length)];
+          this.audio.play(randomZombieAttackSound)
           this.player.takeDamage(damage)
           this.audio.play("playerHit")
 
@@ -580,26 +600,31 @@ export class GameEngine {
   }
 
   private collectPowerUp(powerUp: PowerUp) {
-    this.audio.play("powerUp")
     this.triggerScreenShake(5)
 
     switch (powerUp.type) {
       case "insta-kill":
+        this.audio.play("instaKill")
+        this.activePowerUp = powerUp.type
+        this.powerUpTimer = 30000
+        break
       case "double-points":
+        this.audio.play("doublePoints")
         this.activePowerUp = powerUp.type
         this.powerUpTimer = 30000
         break
       case "max-ammo":
+        this.audio.play("maxAmmo")
         this.player.maxAmmo()
         break
       case "nuke":
+        this.audio.play("nukeExplosion")
         for (const zombie of this.zombies) {
           zombie.takeDamage(9999)
           this.points += 50
         }
         this.zombies = []
         this.triggerScreenShake(20)
-        this.audio.play("explosion")
         break
     }
   }
@@ -688,7 +713,11 @@ export class GameEngine {
         }
 
         this.triggerScreenShake(grenade.type === "frag" ? 15 : 8)
-        this.audio.play("explosion")
+        if (grenade.type === "frag") {
+          this.audio.play("fragExplosion")
+        } else {
+          this.audio.play("stunExplosion")
+        }
         this.grenades.splice(i, 1)
       }
     }
@@ -710,7 +739,7 @@ export class GameEngine {
     const grenade = this.player.throwGrenade(targetX, targetY, type)
     if (grenade) {
       this.grenades.push(grenade)
-      this.audio.play("reload") // Use as placeholder for grenade throw sound
+      this.audio.play("throwGrenade")
     }
   }
 
@@ -936,12 +965,12 @@ export class GameEngine {
       if (gpState.buttons.weaponNext) {
         const nextIndex = (this.player.currentWeaponIndex + 1) % this.player.weapons.length
         this.player.switchWeapon(nextIndex)
-        this.audio.play("wallBuy1")
+        this.audio.play("switchWeapons")
       }
       if (gpState.buttons.weaponPrev) {
         const prevIndex = (this.player.currentWeaponIndex - 1 + this.player.weapons.length) % this.player.weapons.length
         this.player.switchWeapon(prevIndex)
-        this.audio.play("wallBuy2")
+        this.audio.play("switchWeapons")
       }
       if (gpState.buttons.prevWeapon) this.throwGrenade("stun")
       if (gpState.buttons.nextWeapon) this.throwGrenade("frag")
@@ -951,7 +980,21 @@ export class GameEngine {
       const bullet = this.player.shoot(dt)
       if (bullet) {
         this.bullets.push(bullet)
-        this.audio.play("shoot")
+        // Play weapon-specific shooting sound
+        const currentWeapon = this.player.getCurrentWeapon()
+        if (currentWeapon) {
+          if (currentWeapon.name.includes("Pistol")) {
+            this.audio.play("pistolShoot")
+          } else if (currentWeapon.name.includes("Rifle") || currentWeapon.name.includes("AK47") || currentWeapon.name.includes("LMG")) {
+            this.audio.play("rifleShoot")
+          } else if (currentWeapon.name.includes("Shotgun")) {
+            this.audio.play("shotgunShoot")
+          } else {
+            this.audio.play("shoot") // fallback to generic shoot
+          }
+        } else {
+          this.audio.play("shoot")
+        }
         this.triggerScreenShake(3)
       }
     }

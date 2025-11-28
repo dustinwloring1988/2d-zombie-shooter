@@ -1,22 +1,61 @@
 type SoundType =
   | "shoot"
   | "reload"
+  | "pistolShoot"
+  | "rifleShoot"
+  | "shotgunShoot"
+  | "knifeAttack"
+  | "switchWeapons"
   | "zombieHit"
   | "zombieDeath"
+  | "zombieAttack1"
+  | "zombieAttack2"
+  | "zombieAttack3"
   | "playerHit"
   | "purchase"
   | "perk"
   | "powerUp"
   | "mysteryBox"
+  | "mysteryBox1"
+  | "mysteryBox2"
+  | "mysteryBox3"
   | "roundEnd"
+  | "wonRound1"
+  | "wonRound2"
+  | "wonRound3"
+  | "wonRound4"
+  | "wonRound5"
+  | "wonRound6"
+  | "wonRound7"
+  | "wonRound8"
+  | "wonRound9"
+  | "wonRound10"
+  | "wonRound11"
+  | "wonRound12"
+  | "wonRound13"
+  | "wonRound14"
+  | "wonRound15"
   | "doorOpen"
+  | "doorSound"
   | "vendingMachine"
+  | "vending1"
+  | "vending2"
   | "mysteryBoxRotate1"
   | "mysteryBoxRotate2"
   | "wallBuy1"
   | "wallBuy2"
+  | "wallBuySwitch1"
+  | "wallBuySwitch2"
   | "gameOver1"
   | "gameOver2"
+  | "fragExplosion"
+  | "stunExplosion"
+  | "nukeExplosion"
+  | "kaboom"
+  | "doublePoints"
+  | "instaKill"
+  | "maxAmmo"
+  | "throwGrenade"
 
 type AudioType = "sound" | "music";
 
@@ -52,22 +91,61 @@ export class AudioManager {
     const soundMap: Record<SoundType, string> = {
       shoot: "/audio/sounds/shoot.mp3",
       reload: "/audio/sounds/reload.mp3",
+      pistolShoot: "/audio/sounds/generic-pistol.mp3",
+      rifleShoot: "/audio/sounds/generic-rifle.mp3",
+      shotgunShoot: "/audio/sounds/generic-shotgun.mp3",
+      knifeAttack: "/audio/sounds/generic-knife.mp3",
+      switchWeapons: "/audio/sounds/switch-weapons.mp3",
       zombieHit: "/audio/sounds/zombie-hit.mp3",
       zombieDeath: "/audio/sounds/zombie-death.mp3",
       playerHit: "/audio/sounds/player-hit.mp3",
+      zombieAttack1: "/audio/sounds/zombie-attacking-1.mp3",
+      zombieAttack2: "/audio/sounds/zombie-attacking-2.mp3",
+      zombieAttack3: "/audio/sounds/zombie-attacking-3.mp3",
       purchase: "/audio/sounds/purchase.mp3",
       perk: "/audio/sounds/perk.mp3",
       powerUp: "/audio/sounds/powerup-spoken.mp3",
       mysteryBox: "/audio/sounds/mystery-box-open.mp3",
+      mysteryBox1: "/audio/sounds/mystery-1.mp3",
+      mysteryBox2: "/audio/sounds/mystery-2.mp3",
+      mysteryBox3: "/audio/sounds/rtfm-1.mp3",
       roundEnd: "/audio/sounds/round-end.mp3",
+      wonRound1: "/audio/sounds/won-round-1.mp3",
+      wonRound2: "/audio/sounds/won-round-2.mp3",
+      wonRound3: "/audio/sounds/won-round-3.mp3",
+      wonRound4: "/audio/sounds/won-round-4.mp3",
+      wonRound5: "/audio/sounds/won-round-5.mp3",
+      wonRound6: "/audio/sounds/won-round-6.mp3",
+      wonRound7: "/audio/sounds/won-round-7.mp3",
+      wonRound8: "/audio/sounds/won-round-8.mp3",
+      wonRound9: "/audio/sounds/won-round-9.mp3",
+      wonRound10: "/audio/sounds/won-round-10.mp3",
+      wonRound11: "/audio/sounds/won-round-11.mp3",
+      wonRound12: "/audio/sounds/won-round-12.mp3",
+      wonRound13: "/audio/sounds/won-round-13.mp3",
+      wonRound14: "/audio/sounds/won-round-14.mp3",
+      wonRound15: "/audio/sounds/won-round-15.mp3",
       doorOpen: "/audio/sounds/door-open.mp3",
+      doorSound: "/audio/sounds/door.mp3",
       vendingMachine: "/audio/sounds/vending-machine.mp3",
+      vending1: "/audio/sounds/vending-1.mp3",
+      vending2: "/audio/sounds/vending-2.mp3",
       mysteryBoxRotate1: "/audio/sounds/mystery-box-rotate1.mp3",
       mysteryBoxRotate2: "/audio/sounds/mystery-box-rotate2.mp3",
-      wallBuy1: "/audio/sounds/wall-buy1.mp3",
-      wallBuy2: "/audio/sounds/wall-buy2.mp3",
+      wallBuy1: "/audio/sounds/wall-buy-1.mp3",
+      wallBuy2: "/audio/sounds/wall-buy-2.mp3",
+      wallBuySwitch1: "/audio/sounds/wall-buy-1.mp3",
+      wallBuySwitch2: "/audio/sounds/wall-buy-2.mp3",
       gameOver1: "/audio/sounds/game-over-1.mp3",
       gameOver2: "/audio/sounds/game-over-2.mp3",
+      fragExplosion: "/audio/sounds/generic-gernade-explode.mp3",
+      stunExplosion: "/audio/sounds/generic-stun-explode.mp3",
+      nukeExplosion: "/audio/sounds/kaboom.mp3",
+      kaboom: "/audio/sounds/kaboom.mp3",
+      doublePoints: "/audio/sounds/double-points.mp3",
+      instaKill: "/audio/sounds/insta-kill.mp3",
+      maxAmmo: "/audio/sounds/max-ammo.mp3",
+      throwGrenade: "/audio/sounds/throw.mp3",
     };
 
     const src = soundMap[soundType];
