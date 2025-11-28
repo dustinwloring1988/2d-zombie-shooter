@@ -1,3 +1,5 @@
+<img width="1024" height="913" alt="git-cover" src="https://github.com/user-attachments/assets/8a7c397d-1268-446a-8be2-2c8f3ca8de00" />
+
 # 2D Zombie Shooter
 
 A fast-paced 2D zombie shooter game built with Next.js and React. Survive endless waves of zombies while upgrading your weapons and defenses!
