@@ -14,7 +14,9 @@ export function GuideGallery({ isOpen, onClose }: GuideGalleryProps) {
     "/guide/rtfm-1.png",
     "/guide/rtfm-2.png",
     "/guide/rtfm-3.png",
-    "/guide/rtfm-4.png"
+    "/guide/rtfm-4.png",
+    "/guide/rtfm-5.png",
+    "/guide/rtfm-6.png"
   ];
 
   // Handle keyboard navigation
@@ -46,8 +48,8 @@ export function GuideGallery({ isOpen, onClose }: GuideGalleryProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 backdrop-blur-sm">
-      <div className="relative w-full max-w-4xl h-[80vh] flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black">
+      <div className="relative w-full max-w-7xl h-[95vh] flex flex-col">
         {/* Close button */}
         <button
           onClick={onClose}
@@ -58,11 +60,11 @@ export function GuideGallery({ isOpen, onClose }: GuideGalleryProps) {
         </button>
 
         {/* Image container */}
-        <div className="flex-1 flex items-center justify-center relative overflow-hidden rounded-lg">
+        <div className="flex-1 flex items-center justify-center relative overflow-hidden rounded-lg bg-transparent">
           <img
             src={guideImages[currentIndex]}
             alt={`Game guide step ${currentIndex + 1}`}
-            className="max-h-full max-w-full object-contain"
+            className="max-h-[95%] max-w-[98%] object-contain"
             onError={(e) => {
               // Fallback if image doesn't load
               e.currentTarget.src = "/placeholder.png"; // placeholder for error case
@@ -88,25 +90,25 @@ export function GuideGallery({ isOpen, onClose }: GuideGalleryProps) {
           </button>
         </div>
 
-        {/* Image counter */}
-        <div className="flex justify-center mt-4">
-          <div className="flex space-x-2">
+        {/* Image counter and navigation */}
+        <div className="flex flex-col items-center mt-4 px-4">
+          <div className="flex space-x-2 mb-2">
             {guideImages.map((_, index) => (
               <button
                 key={index}
                 onClick={() => setCurrentIndex(index)}
-                className={`w-3 h-3 rounded-full ${
+                className={`w-4 h-4 rounded-full ${
                   index === currentIndex ? "bg-red-500" : "bg-gray-600"
-                }`}
+                } transition-all duration-300 hover:scale-125`}
                 aria-label={`Go to guide ${index + 1}`}
               />
             ))}
           </div>
-        </div>
 
-        {/* Navigation hint */}
-        <div className="text-center text-gray-400 text-sm mt-2">
-          Use arrow keys to navigate • Press ESC to close
+          {/* Navigation hint */}
+          <div className="text-center text-gray-300 text-sm py-2">
+            {currentIndex + 1} of {guideImages.length} • Use arrow keys to navigate • Press ESC to close
+          </div>
         </div>
       </div>
     </div>
