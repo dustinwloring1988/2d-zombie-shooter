@@ -2,12 +2,12 @@ import { useState, useEffect } from "react";
 import { MapPin, Zap, Shield, Skull } from "lucide-react";
 
 interface MapSelectorProps {
-  onSelectMap: (mapId: "level1" | "level2" | "level3", characterType?: "default" | "magician") => void;
+  onSelectMap: (mapId: "level1" | "level2", characterType?: "default" | "magician") => void;
   characterType?: "default" | "magician";
 }
 
 export function MapSelector({ onSelectMap, characterType = "default" }: MapSelectorProps) {
-  const [selectedMap, setSelectedMap] = useState<"level1" | "level2" | "level3" | null>(null);
+  const [selectedMap, setSelectedMap] = useState<"level1" | "level2" | null>(null);
 
   const maps = [
     {
@@ -19,21 +19,14 @@ export function MapSelector({ onSelectMap, characterType = "default" }: MapSelec
     },
     {
       id: "level2",
-      name: "Fortress",
-      description: "A heavily fortified fortress with secret tunnels",
+      name: "Lockdown: Night Shift",
+      description: "A compound outside town overrun with zombies. Retrieve security logs, weapons, neutralize biohazards and reach the control room to trigger lockdown.",
       icon: <Zap className="w-8 h-8" />,
       color: "from-blue-700 to-blue-900"
-    },
-    {
-      id: "level3",
-      name: "Complex",
-      description: "Multiple buildings separated by grassy areas. Unlock doors to explore.",
-      icon: <Zap className="w-8 h-8" />,
-      color: "from-green-700 to-green-900"
     }
   ];
 
-  const handleSelect = (mapId: "level1" | "level2" | "level3") => {
+  const handleSelect = (mapId: "level1" | "level2") => {
     setSelectedMap(mapId);
   };
 
@@ -93,25 +86,17 @@ export function MapSelector({ onSelectMap, characterType = "default" }: MapSelec
                     <Skull className="w-4 h-4 text-zinc-700" />
                     <Skull className="w-4 h-4 text-zinc-700" />
                   </div>
-                ) : map.id === "level3" ? (
-                  <div className="flex gap-1">
-                    <Skull className="w-4 h-4 text-red-500" />
-                    <Skull className="w-4 h-4 text-red-500" />
-                    <Skull className="w-4 h-4 text-red-500" />
-                    <Skull className="w-4 h-4 text-zinc-700" />
-                    <Skull className="w-4 h-4 text-zinc-700" />
-                  </div>
                 ) : (
                   <div className="flex gap-1">
                     <Skull className="w-4 h-4 text-red-500" />
                     <Skull className="w-4 h-4 text-red-500" />
                     <Skull className="w-4 h-4 text-red-500" />
                     <Skull className="w-4 h-4 text-red-500" />
-                    <Skull className="w-4 h-4 text-red-500" />
+                    <Skull className="w-4 h-4 text-zinc-700" />
                   </div>
                 )}
                 <span className="text-zinc-400 text-sm">
-                  {map.id === "level1" ? "Easy" : map.id === "level3" ? "Medium" : "Hard"}
+                  {map.id === "level1" ? "Easy" : "Medium"}
                 </span>
               </div>
             </div>

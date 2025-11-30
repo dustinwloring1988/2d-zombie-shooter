@@ -15,7 +15,7 @@ export default function ZombieGame() {
   const gameEngineRef = useRef<GameEngine | null>(null)
   const [gameState, setGameState] = useState<"menu" | "mapselect" | "playing" | "paused" | "gameover">("menu")
   const [showPauseMenu, setShowPauseMenu] = useState(false)
-  const [selectedMap, setSelectedMap] = useState<"level1" | "level2" | "level3">("level1")
+  const [selectedMap, setSelectedMap] = useState<"level1" | "level2">("level1")
   const [selectedCharacter, setSelectedCharacter] = useState<"default" | "magician">("default")
   const [hudData, setHudData] = useState({
     health: 100,
@@ -133,7 +133,7 @@ export default function ZombieGame() {
     }
   }, [])
 
-  const selectAndStartGame = useCallback((mapId: "level1" | "level2" | "level3", currentSettings?: typeof settings, characterType: "default" | "magician" = "default") => {
+  const selectAndStartGame = useCallback((mapId: "level1" | "level2", currentSettings?: typeof settings, characterType: "default" | "magician" = "default") => {
     setSelectedMap(mapId);
     setGameState("playing")
     setShowPauseMenu(false)

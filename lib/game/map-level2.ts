@@ -63,7 +63,7 @@ export class GameMapLevel2 {
   mysteryBoxPositions: { x: number; y: number; buildingId: string }[] = []
   mysteryBoxCurrentPosition: number = 0
 
-  private tileSize = 80
+  tileSize = 80
 
   constructor(width: number, height: number) {
     this.width = width
@@ -73,105 +73,93 @@ export class GameMapLevel2 {
   }
 
   private generateMap() {
-    // Outer walls
+    // Outer walls - creating a compound layout with four main buildings
     this.walls.push({ x: 0, y: 0, width: this.width, height: 40 }) // Top
     this.walls.push({ x: 0, y: this.height - 40, width: this.width, height: 40 }) // Bottom
     this.walls.push({ x: 0, y: 0, width: 40, height: this.height }) // Left
     this.walls.push({ x: this.width - 40, y: 0, width: 40, height: this.height }) // Right
 
-    // Starting room - has max ammo box and single weapon
+    // Starting room - Entry area with basic supplies
     this.walls.push({ x: 900, y: 900, width: 600, height: 30 }) // Top
-    this.walls.push({ x: 900, y: 900, width: 30, height: 600 }) // Left
-    this.walls.push({ x: 1470, y: 900, width: 30, height: 600 }) // Right
+    this.walls.push({ x: 900, y: 900, width: 30, height: 220 }) // Left top section (to door)
+    this.walls.push({ x: 900, y: 1280, width: 30, height: 350 }) // Left bottom section (after door)
+    this.walls.push({ x: 1470, y: 900, width: 30, height: 220 }) // Right top section (to door)
+    this.walls.push({ x: 1470, y: 1280, width: 30, height: 350 }) // Right bottom section (after door)
     this.walls.push({ x: 900, y: 1470, width: 600, height: 30 }) // Bottom
 
-    // Building 1 (North) - Medium building with 2 doors
-    this.walls.push({ x: 900, y: 300, width: 600, height: 30 }) // Top
-    this.walls.push({ x: 900, y: 300, width: 30, height: 350 }) // Left
-    this.walls.push({ x: 1470, y: 300, width: 30, height: 350 }) // Right
-    this.walls.push({ x: 900, y: 650, width: 600, height: 30 }) // Bottom
+    // Building 1: Office/Admin Wing (Northwest) - "Missing Files" Quest
+    this.walls.push({ x: 300, y: 300, width: 500, height: 30 }) // Top
+    this.walls.push({ x: 300, y: 300, width: 30, height: 400 }) // Left
+    this.walls.push({ x: 770, y: 300, width: 30, height: 400 }) // Right
+    this.walls.push({ x: 300, y: 670, width: 500, height: 30 }) // Bottom
 
-    // Building 2 (Northeast) - Small building with 1 door
-    this.walls.push({ x: 1500, y: 300, width: 500, height: 30 }) // Top
-    this.walls.push({ x: 1500, y: 300, width: 30, height: 350 }) // Left
-    this.walls.push({ x: 1970, y: 300, width: 30, height: 350 }) // Right
-    this.walls.push({ x: 1500, y: 650, width: 500, height: 30 }) // Bottom
+    // Building 2: Armory/Storage (Northeast) - "Locked & Loaded" Quest
+    this.walls.push({ x: 1600, y: 300, width: 500, height: 30 }) // Top
+    this.walls.push({ x: 1600, y: 300, width: 30, height: 400 }) // Left
+    this.walls.push({ x: 2070, y: 300, width: 30, height: 400 }) // Right
+    this.walls.push({ x: 1600, y: 670, width: 500, height: 30 }) // Bottom
 
-    // Building 3 (East) - Large building with 3 doors
-    this.walls.push({ x: 1500, y: 900, width: 30, height: 600 }) // Left
-    this.walls.push({ x: 2100, y: 900, width: 300, height: 30 }) // Top
-    this.walls.push({ x: 2100, y: 1470, width: 300, height: 30 }) // Bottom
-    this.walls.push({ x: 2370, y: 900, width: 30, height: 600 }) // Right
+    // Building 3: Lab/Chemical Room (Southwest) - "Biohazard Burst" Quest
+    this.walls.push({ x: 300, y: 1600, width: 500, height: 30 }) // Top
+    this.walls.push({ x: 300, y: 1600, width: 30, height: 400 }) // Left
+    this.walls.push({ x: 770, y: 1600, width: 30, height: 400 }) // Right
+    this.walls.push({ x: 300, y: 1970, width: 500, height: 30 }) // Bottom
 
-    // Building 4 (Southeast) - Medium building with 2 doors
-    this.walls.push({ x: 1500, y: 1500, width: 600, height: 30 }) // Top
-    this.walls.push({ x: 1500, y: 1500, width: 30, height: 350 }) // Left
-    this.walls.push({ x: 2070, y: 1500, width: 30, height: 350 }) // Right
-    this.walls.push({ x: 1500, y: 1850, width: 600, height: 30 }) // Bottom
+    // Building 4: Control/Comms/Server Room (Southeast) - "Last Call" Quest
+    this.walls.push({ x: 1600, y: 1600, width: 500, height: 30 }) // Top
+    this.walls.push({ x: 1600, y: 1600, width: 30, height: 400 }) // Left
+    this.walls.push({ x: 2070, y: 1600, width: 30, height: 400 }) // Right
+    this.walls.push({ x: 1600, y: 1970, width: 500, height: 30 }) // Bottom
 
-    // Building 5 (South) - Small building with 1 door
-    this.walls.push({ x: 900, y: 1500, width: 600, height: 30 }) // Top
-    this.walls.push({ x: 900, y: 1500, width: 30, height: 350 }) // Left
-    this.walls.push({ x: 1470, y: 1500, width: 30, height: 350 }) // Right
-    this.walls.push({ x: 900, y: 1850, width: 600, height: 30 }) // Bottom
+    // Connecting paths between buildings
+    // Path from start to Office (NW)
+    this.walls.push({ x: 900, y: 670, width: 60, height: 230 }) // Vertical down from start to path
+    this.walls.push({ x: 300, y: 800, width: 660, height: 30 }) // Horizontal to Office
+    this.walls.push({ x: 770, y: 670, width: 30, height: 130 }) // Connect to Office
 
-    // Building 6 (Southwest) - Medium building with 2 doors
-    this.walls.push({ x: 300, y: 1500, width: 600, height: 30 }) // Top
-    this.walls.push({ x: 300, y: 1500, width: 30, height: 350 }) // Left
-    this.walls.push({ x: 870, y: 1500, width: 30, height: 350 }) // Right
-    this.walls.push({ x: 300, y: 1850, width: 600, height: 30 }) // Bottom
+    // Path from start to Armory (NE)
+    this.walls.push({ x: 1470, y: 670, width: 60, height: 230 }) // Vertical down from start to path
+    this.walls.push({ x: 1530, y: 800, width: 140, height: 30 }) // Small connector
+    this.walls.push({ x: 1670, y: 800, width: 400, height: 30 }) // Horizontal to Armory
+    this.walls.push({ x: 2040, y: 800, width: 30, height: 200 }) // Connect to Armory
 
-    // Building 7 (West) - Large building with 3 doors
-    this.walls.push({ x: 300, y: 900, width: 30, height: 600 }) // Right
-    this.walls.push({ x: 30, y: 900, width: 270, height: 30 }) // Top
-    this.walls.push({ x: 30, y: 1470, width: 270, height: 30 }) // Bottom
-    this.walls.push({ x: 30, y: 900, width: 30, height: 600 }) // Left
+    // Path from start down to lower area
+    this.walls.push({ x: 900, y: 1470, width: 600, height: 30 }) // Horizontal path
+    this.walls.push({ x: 900, y: 1500, width: 30, height: 100 }) // Path to Lab
+    this.walls.push({ x: 1470, y: 1500, width: 30, height: 100 }) // Path to Control
 
-    // Building 8 (Northwest) - Medium building with 2 doors
-    this.walls.push({ x: 300, y: 300, width: 600, height: 30 }) // Top
-    this.walls.push({ x: 300, y: 300, width: 30, height: 350 }) // Left
-    this.walls.push({ x: 870, y: 300, width: 30, height: 350 }) // Right
-    this.walls.push({ x: 300, y: 650, width: 600, height: 30 }) // Bottom
-
-    // Grass areas between buildings
-    // Center grass area already exists as starting room
+    // Path from Lab to Control
+    this.walls.push({ x: 800, y: 1970, width: 800, height: 30 }) // Horizontal
+    this.walls.push({ x: 1570, y: 1970, width: 30, height: 30 }) // Connect to Control
 
     // Create doors for each building - all doors in same building have same cost
     this.doors = [
-      // Building 1 doors (North - 2 doors)
-      { id: "door-b1-1", x: 1000, y: 300, width: 100, height: 30, cost: 600, isOpen: false, roomId: "building1", buildingId: "building1" },
-      { id: "door-b1-2", x: 1300, y: 300, width: 100, height: 30, cost: 600, isOpen: false, roomId: "building1", buildingId: "building1" },
+      // Office/Admin Wing doors (Building 1) - "Missing Files" Quest
+      { id: "door-office-1", x: 500, y: 300, width: 100, height: 30, cost: 500, isOpen: false, roomId: "office", buildingId: "office" },
+      { id: "door-office-2", x: 300, y: 450, width: 30, height: 100, cost: 600, isOpen: false, roomId: "office", buildingId: "office" },
 
-      // Building 2 doors (Northeast - 1 door)
-      { id: "door-b2-1", x: 1700, y: 300, width: 100, height: 30, cost: 700, isOpen: false, roomId: "building2", buildingId: "building2" },
+      // Armory/Storage doors (Building 2) - "Locked & Loaded" Quest
+      { id: "door-armory-1", x: 1800, y: 300, width: 100, height: 30, cost: 800, isOpen: false, roomId: "armory", buildingId: "armory" },
+      { id: "door-armory-2", x: 2070, y: 450, width: 30, height: 100, cost: 900, isOpen: false, roomId: "armory", buildingId: "armory" },
 
-      // Building 3 doors (East - 3 doors)
-      { id: "door-b3-1", x: 1500, y: 1000, width: 30, height: 100, cost: 800, isOpen: false, roomId: "building3", buildingId: "building3" },
-      { id: "door-b3-2", x: 1500, y: 1250, width: 30, height: 100, cost: 800, isOpen: false, roomId: "building3", buildingId: "building3" },
-      { id: "door-b3-3", x: 1500, y: 1400, width: 30, height: 100, cost: 800, isOpen: false, roomId: "building3", buildingId: "building3" },
+      // Lab/Chemical Room doors (Building 3) - "Biohazard Burst" Quest
+      { id: "door-lab-1", x: 500, y: 1600, width: 100, height: 30, cost: 1000, isOpen: false, roomId: "lab", buildingId: "lab" },
+      { id: "door-lab-2", x: 300, y: 1750, width: 30, height: 100, cost: 1100, isOpen: false, roomId: "lab", buildingId: "lab" },
 
-      // Building 4 doors (Southeast - 2 doors)
-      { id: "door-b4-1", x: 1700, y: 1500, width: 100, height: 30, cost: 750, isOpen: false, roomId: "building4", buildingId: "building4" },
-      { id: "door-b4-2", x: 1900, y: 1500, width: 100, height: 30, cost: 750, isOpen: false, roomId: "building4", buildingId: "building4" },
+      // Control/Comms/Server Room doors (Building 4) - "Last Call" Quest
+      { id: "door-control-1", x: 1800, y: 1600, width: 100, height: 30, cost: 1200, isOpen: false, roomId: "control", buildingId: "control" },
+      { id: "door-control-2", x: 2070, y: 1750, width: 30, height: 100, cost: 1200, isOpen: false, roomId: "control", buildingId: "control" },
 
-      // Building 5 doors (South - 1 door)
-      { id: "door-b5-1", x: 1200, y: 1500, width: 100, height: 30, cost: 650, isOpen: false, roomId: "building5", buildingId: "building5" },
+      // Entry doors to the compound (from start area)
+      { id: "door-start-to-office", x: 770, y: 750, width: 30, height: 50, cost: 300, isOpen: false, roomId: "path1", buildingId: "compound-entry" },
+      { id: "door-start-to-armory", x: 1500, y: 750, width: 30, height: 50, cost: 300, isOpen: false, roomId: "path2", buildingId: "compound-entry" },
 
-      // Building 6 doors (Southwest - 2 doors)
-      { id: "door-b6-1", x: 500, y: 1500, width: 100, height: 30, cost: 650, isOpen: false, roomId: "building6", buildingId: "building6" },
-      { id: "door-b6-2", x: 700, y: 1500, width: 100, height: 30, cost: 650, isOpen: false, roomId: "building6", buildingId: "building6" },
-
-      // Building 7 doors (West - 3 doors)
-      { id: "door-b7-1", x: 300, y: 1000, width: 30, height: 100, cost: 800, isOpen: false, roomId: "building7", buildingId: "building7" },
-      { id: "door-b7-2", x: 300, y: 1250, width: 30, height: 100, cost: 800, isOpen: false, roomId: "building7", buildingId: "building7" },
-      { id: "door-b7-3", x: 300, y: 1400, width: 30, height: 100, cost: 800, isOpen: false, roomId: "building7", buildingId: "building7" },
-
-      // Building 8 doors (Northwest - 2 doors)
-      { id: "door-b8-1", x: 500, y: 300, width: 100, height: 30, cost: 600, isOpen: false, roomId: "building8", buildingId: "building8" },
-      { id: "door-b8-2", x: 700, y: 300, width: 100, height: 30, cost: 600, isOpen: false, roomId: "building8", buildingId: "building8" },
+      // Exit doors from starting building to outside (left and right sides)
+      { id: "door-start-left-exit", x: 870, y: 1150, width: 30, height: 100, cost: 200, isOpen: false, roomId: "exit-left", buildingId: "compound-exit" },
+      { id: "door-start-right-exit", x: 1470, y: 1150, width: 30, height: 100, cost: 200, isOpen: false, roomId: "exit-right", buildingId: "compound-exit" },
     ]
 
-    // Spawn points for each building
+    // Spawn points for each building and pathway
     this.spawnPoints = [
       // Start room spawns
       { x: 1100, y: 1000, roomId: "start" },
@@ -179,94 +167,75 @@ export class GameMapLevel2 {
       { x: 1100, y: 1400, roomId: "start" },
       { x: 1300, y: 1400, roomId: "start" },
 
-      // Building 1 spawns
-      { x: 1100, y: 400, roomId: "building1" },
-      { x: 1300, y: 400, roomId: "building1" },
-      { x: 1200, y: 550, roomId: "building1" },
+      // Exit area spawns (for new doors)
+      { x: 800, y: 1150, roomId: "exit-left" },
+      { x: 1540, y: 1150, roomId: "exit-right" },
 
-      // Building 2 spawns
-      { x: 1700, y: 400, roomId: "building2" },
-      { x: 1800, y: 400, roomId: "building2" },
-      { x: 1750, y: 550, roomId: "building2" },
+      // Office/Admin Wing spawns
+      { x: 450, y: 400, roomId: "office" },
+      { x: 600, y: 400, roomId: "office" },
+      { x: 450, y: 550, roomId: "office" },
+      { x: 600, y: 550, roomId: "office" },
 
-      // Building 3 spawns
-      { x: 2200, y: 1000, roomId: "building3" },
-      { x: 2200, y: 1200, roomId: "building3" },
-      { x: 2200, y: 1400, roomId: "building3" },
+      // Armory/Storage spawns
+      { x: 1750, y: 400, roomId: "armory" },
+      { x: 1900, y: 400, roomId: "armory" },
+      { x: 1750, y: 550, roomId: "armory" },
+      { x: 1900, y: 550, roomId: "armory" },
 
-      // Building 4 spawns
-      { x: 1700, y: 1600, roomId: "building4" },
-      { x: 1900, y: 1600, roomId: "building4" },
-      { x: 1800, y: 1750, roomId: "building4" },
+      // Lab/Chemical Room spawns
+      { x: 450, y: 1700, roomId: "lab" },
+      { x: 600, y: 1700, roomId: "lab" },
+      { x: 450, y: 1850, roomId: "lab" },
+      { x: 600, y: 1850, roomId: "lab" },
 
-      // Building 5 spawns
-      { x: 1100, y: 1600, roomId: "building5" },
-      { x: 1300, y: 1600, roomId: "building5" },
-      { x: 1200, y: 1750, roomId: "building5" },
+      // Control/Comms/Server Room spawns
+      { x: 1750, y: 1700, roomId: "control" },
+      { x: 1900, y: 1700, roomId: "control" },
+      { x: 1750, y: 1850, roomId: "control" },
+      { x: 1900, y: 1850, roomId: "control" },
 
-      // Building 6 spawns
-      { x: 500, y: 1600, roomId: "building6" },
-      { x: 700, y: 1600, roomId: "building6" },
-      { x: 600, y: 1750, roomId: "building6" },
-
-      // Building 7 spawns
-      { x: 200, y: 1000, roomId: "building7" },
-      { x: 200, y: 1200, roomId: "building7" },
-      { x: 200, y: 1400, roomId: "building7" },
-
-      // Building 8 spawns
-      { x: 500, y: 400, roomId: "building8" },
-      { x: 700, y: 400, roomId: "building8" },
-      { x: 600, y: 550, roomId: "building8" },
+      // Pathway spawns
+      { x: 600, y: 850, roomId: "path1" },
+      { x: 1800, y: 850, roomId: "path2" },
+      { x: 1200, y: 1550, roomId: "path3" },
     ]
 
     // Power switches for each building (for vending machines)
     this.powerSwitches = [
-      { x: 1200, y: 450, buildingId: "building1", isOn: false }, // Building 1
-      { x: 1750, y: 450, buildingId: "building2", isOn: false }, // Building 2
-      { x: 2300, y: 1200, buildingId: "building3", isOn: false }, // Building 3
-      { x: 1800, y: 1700, buildingId: "building4", isOn: false }, // Building 4
-      { x: 1200, y: 1700, buildingId: "building5", isOn: false }, // Building 5
-      { x: 600, y: 1700, buildingId: "building6", isOn: false }, // Building 6
-      { x: 100, y: 1200, buildingId: "building7", isOn: false }, // Building 7
-      { x: 600, y: 450, buildingId: "building8", isOn: false }, // Building 8
+      { x: 600, y: 450, buildingId: "office", isOn: false }, // Office/Admin Wing
+      { x: 1900, y: 450, buildingId: "armory", isOn: false }, // Armory/Storage
+      { x: 600, y: 1750, buildingId: "lab", isOn: false }, // Lab/Chemical Room
+      { x: 1900, y: 1750, buildingId: "control", isOn: false }, // Control/Comms/Server Room
     ]
 
     // Vending machines for each building (require power to use)
     this.vendingMachines = [
-      // Building 1
-      { x: 1100, y: 500, perkType: "juggernog", cost: 2500, buildingId: "building1", powered: false },
-      // Building 2
-      { x: 1800, y: 500, perkType: "speed-cola", cost: 3000, buildingId: "building2", powered: false },
-      // Building 3
-      { x: 2250, y: 1050, perkType: "double-tap", cost: 2000, buildingId: "building3", powered: false },
-      { x: 2250, y: 1350, perkType: "stamin-up", cost: 2000, buildingId: "building3", powered: false },
-      // Building 4
-      { x: 1850, y: 1650, perkType: "quick-revive", cost: 1500, buildingId: "building4", powered: false },
-      // Building 5
-      { x: 1250, y: 1650, perkType: "juggernog", cost: 2500, buildingId: "building5", powered: false },
-      // Building 6
-      { x: 650, y: 1650, perkType: "speed-cola", cost: 3000, buildingId: "building6", powered: false },
-      // Building 7
-      { x: 150, y: 1050, perkType: "double-tap", cost: 2000, buildingId: "building7", powered: false },
-      { x: 150, y: 1350, perkType: "stamin-up", cost: 2000, buildingId: "building7", powered: false },
-      { x: 150, y: 1250, perkType: "quick-revive", cost: 1500, buildingId: "building7", powered: false },
-      // Building 8
-      { x: 650, y: 500, perkType: "juggernog", cost: 2500, buildingId: "building8", powered: false },
+      // Office/Admin Wing - lower tier perks (juggernog, speed-cola)
+      { x: 400, y: 500, perkType: "juggernog", cost: 2500, buildingId: "office", powered: false },
+      { x: 650, y: 500, perkType: "speed-cola", cost: 3000, buildingId: "office", powered: false },
+
+      // Armory/Storage - mid tier perks (double-tap, stamin-up)
+      { x: 1750, y: 500, perkType: "double-tap", cost: 2000, buildingId: "armory", powered: false },
+      { x: 1950, y: 500, perkType: "stamin-up", cost: 2000, buildingId: "armory", powered: false },
+
+      // Lab/Chemical Room - specialty perks (quick-revive, PhD-flu)
+      { x: 400, y: 1800, perkType: "quick-revive", cost: 1500, buildingId: "lab", powered: false },
+      { x: 650, y: 1800, perkType: "phd-flu", cost: 4000, buildingId: "lab", powered: false },
+
+      // Control/Comms/Server Room - high tier perks (everything)
+      { x: 1750, y: 1800, perkType: "juggernog", cost: 2500, buildingId: "control", powered: false },
+      { x: 1950, y: 1800, perkType: "double-tap", cost: 2000, buildingId: "control", powered: false },
     ]
   }
 
   private setupMysteryBoxPositions() {
-    // Define possible mystery box positions across different buildings
+    // Define possible mystery box positions across different buildings in the compound
     this.mysteryBoxPositions = [
-      { x: 1100, y: 450, buildingId: "building1" },
-      { x: 1750, y: 450, buildingId: "building2" },
-      { x: 2250, y: 1200, buildingId: "building3" },
-      { x: 1800, y: 1700, buildingId: "building4" },
-      { x: 1200, y: 1700, buildingId: "building5" },
-      { x: 600, y: 1700, buildingId: "building6" },
-      { x: 150, y: 1200, buildingId: "building7" },
-      { x: 600, y: 450, buildingId: "building8" },
+      { x: 600, y: 450, buildingId: "office" }, // Office/Admin Wing
+      { x: 1900, y: 450, buildingId: "armory" }, // Armory/Storage
+      { x: 600, y: 1750, buildingId: "lab" }, // Lab/Chemical Room
+      { x: 1900, y: 1750, buildingId: "control" }, // Control/Comms/Server Room
     ];
 
     // Set initial position
@@ -404,6 +373,7 @@ export class GameMapLevel2 {
   getDoorNear(x: number, y: number, range = 80): Door | null {
     for (const door of this.doors) {
       if (door.isOpen) continue
+
       const doorCenterX = door.x + door.width / 2
       const doorCenterY = door.y + door.height / 2
       const dist = Math.hypot(x - doorCenterX, y - doorCenterY)
@@ -444,7 +414,7 @@ export class GameMapLevel2 {
       }
     }
 
-    // Draw grass areas between buildings
+    // Draw grass areas between buildings - representing the compound compound
     this.renderGrassAreas(ctx);
 
     // Draw power switches
@@ -506,15 +476,24 @@ export class GameMapLevel2 {
   }
 
   private renderGrassAreas(ctx: CanvasRenderingContext2D) {
-    // Draw grass areas between buildings
+    // Draw grass areas between buildings - representing the compound compound
     ctx.fillStyle = "#4a7c59"; // Green for grass
 
-    // Draw grass in corridors between buildings
-    ctx.fillRect(880, 680, 620, 220); // Between north buildings and center
-    ctx.fillRect(1480, 880, 20, 620); // Vertical corridor east of center
-    ctx.fillRect(880, 1480, 620, 20); // Horizontal corridor south of center
-    ctx.fillRect(280, 880, 20, 620); // Vertical corridor west of center
-    ctx.fillRect(280, 680, 620, 220); // Between northwest building and center
+    // Grass in pathways between buildings
+    ctx.fillRect(330, 700, 440, 100); // Pathway to Office
+    ctx.fillRect(1630, 700, 440, 100); // Pathway to Armory
+    ctx.fillRect(930, 1500, 540, 100); // Central pathway
+    ctx.fillRect(330, 1900, 440, 70); // Pathway to Lab
+    ctx.fillRect(1630, 1900, 440, 70); // Pathway to Control
+
+    // Central compound area
+    ctx.fillRect(930, 900, 540, 600); // Central compound
+
+    // Small grass patches near buildings
+    ctx.fillRect(330, 330, 100, 100); // NW grass patch
+    ctx.fillRect(1970, 330, 100, 100); // NE grass patch
+    ctx.fillRect(330, 1630, 100, 100); // SW grass patch
+    ctx.fillRect(1970, 1630, 100, 100); // SE grass patch
   }
 
   private renderPowerSwitches(ctx: CanvasRenderingContext2D) {
@@ -751,19 +730,19 @@ export class GameMapLevel2 {
     if (dist < 100) {
       ctx.save();
       ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
-      ctx.beginPath();
-      ctx.roundRect(this.mysteryBox.x - 60, this.mysteryBox.y - 45, 120, 50, 8);
-      ctx.fill();
+      ctx.beginPath()
+      ctx.roundRect(this.mysteryBox.x - 60, this.mysteryBox.y - 45, 120, 50, 8)
+      ctx.fill()
 
       ctx.fillStyle = "#ff00ff"; // Magenta for mystery box
-      ctx.font = "bold 14px sans-serif";
-      ctx.textAlign = "center";
-      ctx.fillText("$950", this.mysteryBox.x, this.mysteryBox.y - 25);
+      ctx.font = "bold 14px sans-serif"
+      ctx.textAlign = "center"
+      ctx.fillText("$950", this.mysteryBox.x, this.mysteryBox.y - 25)
 
-      ctx.fillStyle = "#fff";
-      ctx.font = "12px sans-serif";
-      ctx.fillText("[E] Mystery Box", this.mysteryBox.x, this.mysteryBox.y - 8);
-      ctx.restore();
+      ctx.fillStyle = "#fff"
+      ctx.font = "12px sans-serif"
+      ctx.fillText("[E] Mystery Box", this.mysteryBox.x, this.mysteryBox.y - 8)
+      ctx.restore()
     }
   }
 }

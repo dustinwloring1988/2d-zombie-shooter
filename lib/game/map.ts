@@ -29,7 +29,7 @@ export class GameMap {
   doors: Door[] = []
   spawnPoints: SpawnPoint[] = []
   unlockedRooms: Set<string> = new Set(["start"])
-  private tileSize = 80
+  protected tileSize = 80
 
   constructor(width: number, height: number) {
     this.width = width
